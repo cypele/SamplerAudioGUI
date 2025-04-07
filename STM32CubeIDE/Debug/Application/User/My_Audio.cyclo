@@ -1,0 +1,9 @@
+../Application/User/My_Audio.c:124:6:simple_noise_filter	6
+../Application/User/My_Audio.c:161:6:sin_wave_data_to_buffer	2
+../Application/User/My_Audio.c:316:6:SAI_Clock_Configuration	4
+../Application/User/My_Audio.c:367:6:Sai_Out_MspInit	2
+../Application/User/My_Audio.c:427:6:Sai_In_MspInit	2
+../Application/User/My_Audio.c:495:6:CodekInit	1
+../Application/User/My_Audio.c:505:6:AudioInit	2
+../Application/User/My_Audio.c:59:6:Audio_passThrough	6
+../Application/User/My_Audio.c:531:6:StartRecord_Task	9

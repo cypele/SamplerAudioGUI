@@ -1,0 +1,9 @@
+../Application/User/My_Audio.c:124:6:simple_noise_filter	20	static
+../Application/User/My_Audio.c:161:6:sin_wave_data_to_buffer	0	static
+../Application/User/My_Audio.c:316:6:SAI_Clock_Configuration	152	static
+../Application/User/My_Audio.c:367:6:Sai_Out_MspInit	64	static
+../Application/User/My_Audio.c:427:6:Sai_In_MspInit	64	static
+../Application/User/My_Audio.c:495:6:CodekInit	16	static
+../Application/User/My_Audio.c:505:6:AudioInit	40	static
+../Application/User/My_Audio.c:59:6:Audio_passThrough	16	static
+../Application/User/My_Audio.c:531:6:StartRecord_Task	40	static
