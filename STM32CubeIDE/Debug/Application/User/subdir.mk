@@ -14,7 +14,7 @@ C:/TouchGFXProjects/SamplerAudio1/Core/Src/stm32f7xx_hal_timebase_tim.c \
 C:/TouchGFXProjects/SamplerAudio1/Core/Src/stm32f7xx_it.c \
 ../Application/User/syscalls.c \
 ../Application/User/sysmem.c \
-../Application/User/wm8994.c 
+../Application/User/wm8994_initialization.c 
 
 C_DEPS += \
 ./Application/User/My_Audio.d \
@@ -26,7 +26,7 @@ C_DEPS += \
 ./Application/User/stm32f7xx_it.d \
 ./Application/User/syscalls.d \
 ./Application/User/sysmem.d \
-./Application/User/wm8994.d 
+./Application/User/wm8994_initialization.d 
 
 OBJS += \
 ./Application/User/My_Audio.o \
@@ -38,7 +38,7 @@ OBJS += \
 ./Application/User/stm32f7xx_it.o \
 ./Application/User/syscalls.o \
 ./Application/User/sysmem.o \
-./Application/User/wm8994.o 
+./Application/User/wm8994_initialization.o 
 
 
 # Each subdirectory must supply rules for building sources it contributes
@@ -58,7 +58,7 @@ Application/User/stm32f7xx_it.o: C:/TouchGFXProjects/SamplerAudio1/Core/Src/stm3
 clean: clean-Application-2f-User
 
 clean-Application-2f-User:
-	-$(RM) ./Application/User/My_Audio.cyclo ./Application/User/My_Audio.d ./Application/User/My_Audio.o ./Application/User/My_Audio.su ./Application/User/My_SdCard.cyclo ./Application/User/My_SdCard.d ./Application/User/My_SdCard.o ./Application/User/My_SdCard.su ./Application/User/freertos.cyclo ./Application/User/freertos.d ./Application/User/freertos.o ./Application/User/freertos.su ./Application/User/main.cyclo ./Application/User/main.d ./Application/User/main.o ./Application/User/main.su ./Application/User/stm32f7xx_hal_msp.cyclo ./Application/User/stm32f7xx_hal_msp.d ./Application/User/stm32f7xx_hal_msp.o ./Application/User/stm32f7xx_hal_msp.su ./Application/User/stm32f7xx_hal_timebase_tim.cyclo ./Application/User/stm32f7xx_hal_timebase_tim.d ./Application/User/stm32f7xx_hal_timebase_tim.o ./Application/User/stm32f7xx_hal_timebase_tim.su ./Application/User/stm32f7xx_it.cyclo ./Application/User/stm32f7xx_it.d ./Application/User/stm32f7xx_it.o ./Application/User/stm32f7xx_it.su ./Application/User/syscalls.cyclo ./Application/User/syscalls.d ./Application/User/syscalls.o ./Application/User/syscalls.su ./Application/User/sysmem.cyclo ./Application/User/sysmem.d ./Application/User/sysmem.o ./Application/User/sysmem.su ./Application/User/wm8994.cyclo ./Application/User/wm8994.d ./Application/User/wm8994.o ./Application/User/wm8994.su
+	-$(RM) ./Application/User/My_Audio.cyclo ./Application/User/My_Audio.d ./Application/User/My_Audio.o ./Application/User/My_Audio.su ./Application/User/My_SdCard.cyclo ./Application/User/My_SdCard.d ./Application/User/My_SdCard.o ./Application/User/My_SdCard.su ./Application/User/freertos.cyclo ./Application/User/freertos.d ./Application/User/freertos.o ./Application/User/freertos.su ./Application/User/main.cyclo ./Application/User/main.d ./Application/User/main.o ./Application/User/main.su ./Application/User/stm32f7xx_hal_msp.cyclo ./Application/User/stm32f7xx_hal_msp.d ./Application/User/stm32f7xx_hal_msp.o ./Application/User/stm32f7xx_hal_msp.su ./Application/User/stm32f7xx_hal_timebase_tim.cyclo ./Application/User/stm32f7xx_hal_timebase_tim.d ./Application/User/stm32f7xx_hal_timebase_tim.o ./Application/User/stm32f7xx_hal_timebase_tim.su ./Application/User/stm32f7xx_it.cyclo ./Application/User/stm32f7xx_it.d ./Application/User/stm32f7xx_it.o ./Application/User/stm32f7xx_it.su ./Application/User/syscalls.cyclo ./Application/User/syscalls.d ./Application/User/syscalls.o ./Application/User/syscalls.su ./Application/User/sysmem.cyclo ./Application/User/sysmem.d ./Application/User/sysmem.o ./Application/User/sysmem.su ./Application/User/wm8994_initialization.cyclo ./Application/User/wm8994_initialization.d ./Application/User/wm8994_initialization.o ./Application/User/wm8994_initialization.su
 
 .PHONY: clean-Application-2f-User
 

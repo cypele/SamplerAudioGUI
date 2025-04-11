@@ -82,6 +82,19 @@ typedef struct {
     int16_t* data;
     size_t length;
 } AudioChunk_t;
+
+typedef struct {
+    uint8_t data[1024];
+    uint32_t length;
+} SendChunk;
+
+typedef enum {
+    CMD_START_RECORDING,
+	CMD_STOP_RECORDING,
+	CMD_START_PLAYING
+} Audio_SdCard_Command_t;
+
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

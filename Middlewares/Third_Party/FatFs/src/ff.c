@@ -1,3 +1,4 @@
+
 /*----------------------------------------------------------------------------/
 /  FatFs - Generic FAT file system module  R0.12c                             /
 /-----------------------------------------------------------------------------/
@@ -2988,7 +2989,6 @@ BYTE check_fs (	/* 0:FAT, 1:exFAT, 2:Valid BS but not FAT, 3:Not a BS, 4:Disk er
 /*-----------------------------------------------------------------------*/
 /* Find logical drive and check if the volume is mounted                 */
 /*-----------------------------------------------------------------------*/
-
 static
 FRESULT find_volume (	/* FR_OK(0): successful, !=0: any error occurred */
 	const TCHAR** path,	/* Pointer to pointer to the path name (drive number) */

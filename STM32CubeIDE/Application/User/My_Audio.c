@@ -9,27 +9,52 @@
 #include "math.h"
 #include "stdio.h"
 #include "main.h"
+
+#include "audio.h"
+#include "Filter.h"
 // **Zmienna globalna do konfiguracji audio**
 
+#define DMA_MAX(x)           (((x) <= 0xFFFF)? (x):0XFFFF)
 
 // **Bufory audio**
-int16_t record_buffer[BUFFER_SIZE_SAMPLES];
-int16_t play_buffer[BUFFER_SIZE_SAMPLES];
-int16_t compressed_buffer[BUFFER_SIZE_SAMPLES / 2]; // bo usuwasz połowę danych
+static int16_t record_buffer[BUFFER_SIZE_SAMPLES];
+static int16_t play_buffer[BUFFER_SIZE_SAMPLES];
 
-static uint32_t frequency = AUDIO_FREQUENCY_44K;
-static uint8_t volume = 80;
+static int16_t compressed_buffer0[BUFFER_SIZE_SAMPLES/2];
+static int16_t compressed_buffer1[BUFFER_SIZE_SAMPLES/2];
+
+static int16_t filtered_buffer[BUFFER_SIZE_SAMPLES / 2];
+
+
+uint32_t frequency = AUDIO_FREQUENCY_44K;
+uint8_t volume = 100;
+
+
+
+
 SAI_HandleTypeDef               haudio_out_sai;
 SAI_HandleTypeDef               haudio_in_sai;
-AUDIO_DrvTypeDef *audio_drv = &wm8994_drv;
+
 DMA_HandleTypeDef hdma_sai_tx;
 DMA_HandleTypeDef hdma_sai_rx;
+extern I2C_HandleTypeDef hi2c4;
 
-extern osMessageQId AudioQueueHandle;
+extern osMessageQId CommandAudioQueueHandle;
+extern osMessageQId RecordingQueueHandle;
+extern osMessageQId PlayingQueueHandle;
+
 extern TaskHandle_t xRecordingTaskHandle;
+extern TaskHandle_t xPlayingTaskHandle;
+
+extern SemaphoreHandle_t StartRecordingSemaphoreHandle;
+extern SemaphoreHandle_t StopRecordingSemaphoreHandle;
+extern SemaphoreHandle_t StartPlayingSemaphoreHandle;
+
 
 volatile uint32_t audio_rec_buffer_state = BUFFER_OFFSET_NONE;
 volatile uint32_t audio_tx_buffer_state = 0;
+
+
 
 // **Deklaracja zewnętrznego handlera SAI**
 
@@ -46,71 +71,408 @@ static void SAIx_Out_DeInit(void);
 void SAI_Clock_Configuration(uint32_t AudioFreq);
 void Sai_Out_MspInit(SAI_HandleTypeDef *hsai);
 void Sai_In_MspInit(SAI_HandleTypeDef *hsai);
-void CodekInit(AUDIO_DrvTypeDef  *audio_drv, uint32_t freq);
 void AudioInit(uint32_t AudioFreq);
 void StartRecord_Task(void const * argument);
+void init_polyphase();
+void fir_notch_filter_polyphase(int16_t *input, int16_t *output, int size);
 
 
-extern SemaphoreHandle_t StartRecordingSemaphoreHandle;
 
+extern void StartSd_Task(void const * argument);
+
+
+/* USER CODE BEGIN Header_StartRecordTask */
 /**
- * @brief Inicjalizacja modułu audio
- */
-void Audio_passThrough(void) {
+* @brief Function implementing the Record_Task thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartRecordTask */
 
+/*
+void StartRecAndSaveTaskk(void const * argument)
+{
+    Audio_SdCard_Command_t command;
+    FRESULT res;
+    UINT byteswritten;
+    char filename[32];
+    xRecordingTaskHandle=xTaskGetCurrentTaskHandle();
+    // Montujemy system plików na starcie (zakładamy, że jest to operacja globalna)
+    if (f_mount(&SDFatFS, (TCHAR const*)SDPath, 1) != FR_OK)
+        Error_Handler();
 
-    /* Initialize the codec */
-	AudioInit(frequency);
+    // Inicjalizacja peryferiów audio – jeśli nie musimy tego robić przy każdej operacji,
+    // można to przenieść poza pętlę
+    AudioInit(AUDIO_FREQUENCY_44K);
+    wm8994_Init();
 
-    if (HAL_SAI_Receive_DMA(&haudio_in_sai, (uint8_t*)record_buffer, BUFFER_SIZE_SAMPLES))
+    for(;;)
     {
-    	Error_Handler();
-        return 1;
+        // Oczekujemy na polecenie startu nagrywania
+        if(xQueueReceive(RecordingQueueHandle, &command, portMAX_DELAY) == pdTRUE)
+        {
+            if(command == CMD_START_RECORDING)
+            {
+                GenerateNextFilename(filename);
+                if (f_open(&SDFile, filename, FA_CREATE_ALWAYS | FA_WRITE) != FR_OK)
+                    Error_Handler();
+
+                // Zapisujemy placeholder nagłówka WAV
+                res = f_write(&SDFile, &header, sizeof(WAV_Header), &byteswritten);
+                if ((byteswritten != sizeof(WAV_Header)) || (res != FR_OK))
+                    Error_Handler();
+
+                if (HAL_SAI_Transmit_DMA(&haudio_out_sai, (uint8_t*)play_buffer, BUFFER_SIZE_SAMPLES) != HAL_OK)
+                {
+                    Error_Handler();
+                    return;
+                }
+                // Uruchom DMA dla odbioru audio
+                if (HAL_SAI_Receive_DMA(&haudio_in_sai, (uint8_t*)record_buffer, BUFFER_SIZE_SAMPLES) != HAL_OK)
+                    Error_Handler();
+
+                // Pętla obsługująca nagrywanie – przetwarzanie danych z bufora
+                for (;;)
+                {
+                    // Czekamy na powiadomienie, że bufor jest gotowy (np. z callbacka DMA)
+                    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+
+                    if (audio_rec_buffer_state != BUFFER_OFFSET_NONE)
+                    {
+                        // Wybieramy odpowiednią połowę bufora
+                        int16_t* source_ptr = (audio_rec_buffer_state == BUFFER_OFFSET_HALF) ?
+                                               &record_buffer[0] :
+                                               &record_buffer[BUFFER_SIZE_SAMPLES / 2];
+
+                        // Przetwarzamy dane – przykładowo filtrujemy szum
+                        simple_noise_filter(source_ptr, filtered_buffer, BUFFER_SIZE_SAMPLES / 2);
+
+                        // Zapisujemy przetworzone próbki do pliku
+                        res = f_write(&SDFile, filtered_buffer, (BUFFER_SIZE_SAMPLES / 2) * sizeof(int16_t), &byteswritten);
+                        if (res != FR_OK || byteswritten == 0)
+                            Error_Handler();
+
+                        // Resetujemy stan bufora
+                        audio_rec_buffer_state = BUFFER_OFFSET_NONE;
+                    }
+
+                    // Sprawdzamy, czy użytkownik zażądał przerwania nagrywania, np. przez przyciśnięcie przycisku STOP
+                    if (xSemaphoreTake(StopRecordingSemaphoreHandle, 0) == pdTRUE)
+                    {
+                        // Zatrzymanie DMA – koniec nagrywania
+                        HAL_SAI_DMAStop(&haudio_in_sai);
+
+                        // Uzupełniamy nagłówek WAV z odpowiednią informacją o rozmiarze danych
+                        uint32_t fileSize = f_size(&SDFile);
+                        WAV_Header finalHeader;
+                        FillWavHeader(&finalHeader, 44100, 16, 2, fileSize - sizeof(WAV_Header));
+                        f_lseek(&SDFile, 0);
+                        res = f_write(&SDFile, &finalHeader, sizeof(WAV_Header), &byteswritten);
+                        if ((byteswritten != sizeof(WAV_Header)) || (res != FR_OK))
+                            Error_Handler();
+
+                        UpdateWavHeader(&SDFile);
+                        f_close(&SDFile);
+                        break;  // Zakończyliśmy bieżącą operację nagrywania – wracamy do stanu oczekiwania na komendę
+                    }
+                    taskYIELD();
+                }
+            }
+        }
     }
+}
+*/
 
+/*
+void StartPlayAndReadTaskk(void const * argument)
+{
+    Audio_SdCard_Command_t command;
+    FRESULT res;
+    UINT bytesRead;
+    char filename[32];
 
-    if (HAL_SAI_Transmit_DMA(&haudio_out_sai, (uint8_t*) play_buffer, BUFFER_SIZE_SAMPLES) !=  HAL_OK)
+    // Montujemy system plików na starcie
+    if (f_mount(&SDFatFS, (TCHAR const*)SDPath, 1) != FR_OK)
+        Error_Handler();
+
+    for(;;)
     {
-    	Error_Handler();
-        return 1;
+        // Oczekujemy na polecenie startu odtwarzania
+        if(xQueueReceive(PlayingQueueHandle, &command, portMAX_DELAY) == pdTRUE)
+        {
+            if(command == CMD_START_PLAYING)
+            {
+                // Nazwa pliku może być przekazywana lub wybierana z innego mechanizmu
+                // Tutaj przykładowo ustawiamy statycznie
+                strcpy(filename, "AUDIO015.WAV");
 
+                if (f_open(&SDFile, filename, FA_READ) != FR_OK)
+                    Error_Handler();
+
+                // Pomijamy nagłówek WAV
+                f_lseek(&SDFile, sizeof(WAV_Header));
+
+                // Uruchamiamy transmisję DMA w trybie circular
+                if (HAL_SAI_Transmit_DMA(&haudio_out_sai, (uint8_t*)play_buffer, BUFFER_SIZE_SAMPLES) != HAL_OK)
+                    Error_Handler();
+
+                // Pętla przetwarzania odtwarzania
+                for (;;)
+                {
+                    // Oczekujemy na powiadomienie, że jedna z połówek bufora jest pusta (callback DMA)
+                    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+
+                    // W zależności od stanu bufora określamy, którą połowę uzupełnić
+                    int startIndex = (audio_tx_buffer_state == BUFFER_OFFSET_HALF) ? 0 : BUFFER_SIZE_SAMPLES / 2;
+                    res = f_read(&SDFile, &play_buffer[startIndex], (BUFFER_SIZE_SAMPLES / 2) * sizeof(uint16_t), &bytesRead);
+                    if (res != FR_OK)
+                        Error_Handler();
+
+                    if (bytesRead == 0)  // koniec pliku
+                    {
+                        HAL_SAI_DMAStop(&haudio_out_sai);
+                        f_close(&SDFile);
+                        break; // Zakończyliśmy bieżącą operację odtwarzania – wracamy do oczekiwania na komendę
+                    }
+
+                    // Jeśli odczytany fragment jest mniejszy niż oczekiwany, wyzeruj resztę bufora
+                    if (bytesRead < (BUFFER_SIZE_SAMPLES / 2) * sizeof(uint16_t))
+                    {
+                        memset(&play_buffer[startIndex + bytesRead/sizeof(uint16_t)], 0,
+                               (BUFFER_SIZE_SAMPLES/2) * sizeof(uint16_t) - bytesRead);
+                    }
+
+                    audio_tx_buffer_state = BUFFER_OFFSET_NONE;
+                    taskYIELD();
+                }
+            }
+        }
     }
+}
+*/
 
 
+/* USER CODE BEGIN Header_StartRecordTask */
+/**
+* @brief Function implementing the Record_Task thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartRecordTask */
+void StartRecAndSaveTask(void const * argument)
+{
+    int recordingComplete = 0;
+    int playingComplete = 0;
+    xRecordingTaskHandle = xTaskGetCurrentTaskHandle();
+    xPlayingTaskHandle = xTaskGetCurrentTaskHandle();
 
-    printf("Audio initialized successfully!\n");
+    AudioChunk_t chunk;
+    int current_compressed_buffer = 0;
+    Audio_SdCard_Command_t command;
 
-    audio_rec_buffer_state = BUFFER_OFFSET_NONE;
-     while (1)
-     {
-         /* 1st or 2nd half of the record buffer ready for being copied
-         to the Playback buffer */
-         if (audio_rec_buffer_state != BUFFER_OFFSET_NONE)
-         {
-             /* Copy half of the record buffer to the playback buffer */
-       	  if (audio_rec_buffer_state == BUFFER_OFFSET_HALF)
-       	  {
+    for (;;)
+    {
+        if (xQueueReceive(CommandAudioQueueHandle, &command, portMAX_DELAY) == pdTRUE)
+        {
+            if (command == CMD_START_RECORDING)
+            {
+                recordingComplete = 0;
+                audio_rec_buffer_state = BUFFER_OFFSET_NONE;
 
-       	      CopyBuffer(&play_buffer[0],
-       	    		  	 &record_buffer[0],
-					     BUFFER_SIZE_SAMPLES / 2);
+                if (HAL_SAI_Receive_DMA(&haudio_in_sai, (uint8_t*)record_buffer, BUFFER_SIZE_SAMPLES) != HAL_OK)
+                    Error_Handler();
 
+                if (HAL_SAI_Transmit_DMA(&haudio_out_sai, (uint8_t*)play_buffer, BUFFER_SIZE_SAMPLES) != HAL_OK)
+                    Error_Handler();
 
-       	  } else {
-       	      /* if(audio_rec_buffer_state == BUFFER_OFFSET_FULL) */
-       	      CopyBuffer(&play_buffer[BUFFER_SIZE_SAMPLES / 2],
-       	                 &record_buffer[BUFFER_SIZE_SAMPLES / 2],
-						 BUFFER_SIZE_SAMPLES / 2);
+                while (!recordingComplete)
+                {
+                    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
-       	  }
-             /* Wait for next data */
-             audio_rec_buffer_state = BUFFER_OFFSET_NONE;
-         }
-         if (audio_tx_buffer_state)
-         {
-             audio_tx_buffer_state = 0;
-         }
-     } // end while(1)
+                    if (audio_rec_buffer_state != BUFFER_OFFSET_NONE)
+                    {
+                        int16_t* source_ptr = (audio_rec_buffer_state == BUFFER_OFFSET_HALF)
+                                              ? &record_buffer[0]
+                                              : &record_buffer[BUFFER_SIZE_SAMPLES / 2];
+
+                        simple_noise_filter(source_ptr, filtered_buffer, BUFFER_SIZE_SAMPLES / 2);
+
+                        int16_t* output_ptr = (current_compressed_buffer == 0) ? compressed_buffer0 : compressed_buffer1;
+
+                        size_t out_idx = 0;
+                        for (size_t i = 0; i < BUFFER_SIZE_SAMPLES / 2; i += 4)
+                        {
+                            output_ptr[out_idx++] = filtered_buffer[i];     // L
+                            output_ptr[out_idx++] = filtered_buffer[i + 2]; // R
+                        }
+
+                        chunk.data = output_ptr;
+                        chunk.length = out_idx;
+
+                        xQueueSend(RecordingQueueHandle, &chunk, portMAX_DELAY);
+                        current_compressed_buffer ^= 1;
+
+                        audio_rec_buffer_state = BUFFER_OFFSET_NONE;
+
+                        if (xQueueReceive(CommandAudioQueueHandle, &command, 0) == pdTRUE)
+                        {
+                            if (command == CMD_STOP_RECORDING)
+                            {
+                                HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_R_Pin, GPIO_PIN_SET);
+                                HAL_SAI_DMAStop(&haudio_in_sai);
+                                HAL_SAI_DMAStop(&haudio_out_sai);
+                                recordingComplete = 1;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                AudioChunk_t endSignal = { .data = NULL, .length = 0 };
+                xQueueSend(RecordingQueueHandle, &endSignal, portMAX_DELAY);
+            }
+
+            else if (command == CMD_START_PLAYING)
+            {
+                playingComplete = 0;
+                audio_tx_buffer_state = BUFFER_OFFSET_NONE;
+
+                // Zmienne do przetwarzania bieżącego fragmentu odtwarzania
+                AudioChunk_t currentChunk;
+                int16_t *currentChunkData = NULL;
+                size_t currentChunkRemaining = 0;
+                size_t currentPosInChunk = 0;
+
+                // Wstępne (pre-buffering) wypełnienie całego play_buffer danymi z kolejki.
+                // Chcemy mieć pewność, że play_buffer (oba segmenty) zawiera dane zaczynające się od początku nagrania.
+                for (int half = 0; half < 2; ++half)
+                {
+                    int16_t* dest = (half == 0) ? play_buffer : &play_buffer[BUFFER_SIZE_SAMPLES / 2];
+                    size_t destSamples = BUFFER_SIZE_SAMPLES / 2; // liczba próbek w jednej połówce
+                    size_t destIndex = 0;
+
+                    while (destIndex < destSamples)
+                    {
+                        // Jeśli nie mamy już danych z bieżącego chunku, pobieramy kolejny element z kolejki.
+                        if (currentChunkData == NULL || currentChunkRemaining == 0)
+                        {
+                            if (xQueueReceive(PlayingQueueHandle, &currentChunk, portMAX_DELAY) == pdTRUE)
+                            {
+                                // Jeśli otrzymano sygnał zakończenia transmisji (koniec pliku)
+                                if (currentChunk.data == NULL || currentChunk.length == 0)
+                                {
+                                    playingComplete = 1;
+                                    break;
+                                }
+                                currentChunkData    = currentChunk.data;
+                                currentChunkRemaining = currentChunk.length;
+                                currentPosInChunk   = 0;
+                            }
+                        }
+
+                        // Kopiujemy jedną próbkę stereo (2 int16_t) do formatu [L, 0, R, 0]
+                        if (currentChunkRemaining >= 2 && (destIndex + 4) <= destSamples)
+                        {
+                            dest[destIndex]     = currentChunkData[currentPosInChunk];       // lewy kanał
+                            dest[destIndex + 1] = 0;                                           // cisza
+                            dest[destIndex + 2] = currentChunkData[currentPosInChunk + 1];     // prawy kanał
+                            dest[destIndex + 3] = 0;                                           // cisza
+
+                            currentPosInChunk += 2;
+                            currentChunkRemaining -= 2;
+                            destIndex += 4;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+
+                    // Jeśli nie udało się całkowicie wypełnić danej połówki, uzupełniamy resztę zerami
+                    for (; destIndex < destSamples; destIndex++)
+                    {
+                        dest[destIndex] = 0;
+                    }
+
+                    // Jeśli otrzymaliśmy sygnał końca transmisji, wychodzimy z pętli pre-bufferingu
+                    if (playingComplete)
+                        break;
+                }
+
+                // Jeżeli sygnał końca transmisji został odebrany przed wypełnieniem bufora – przerywamy odtwarzanie.
+                if (playingComplete)
+                {
+                    HAL_SAI_DMAStop(&haudio_out_sai);
+                    continue;
+                }
+
+                // Po pre-bufferingu uruchamiamy DMA transmisję.
+                if (HAL_SAI_Transmit_DMA(&haudio_out_sai, (uint8_t*)play_buffer, BUFFER_SIZE_SAMPLES) != HAL_OK)
+                    Error_Handler();
+
+                // Pętla główna odtwarzania – DMA działa w trybie circular, a my aktualizujemy kolejne połówki bufora.
+                while (!playingComplete)
+                {
+                    // Oczekujemy na powiadomienie, że jedna z połówek DMA jest wolna do uzupełnienia
+                    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+
+                    // Określenie, którą połówkę bufora DMA mamy uzupełnić:
+                    // BUFFER_OFFSET_HALF => pierwsza połówka, BUFFER_OFFSET_FULL => druga
+                    int half = (audio_tx_buffer_state == BUFFER_OFFSET_HALF) ? 0 : 1;
+                    int16_t* dest = (half == 0) ? play_buffer : &play_buffer[BUFFER_SIZE_SAMPLES / 2];
+                    size_t destSamples = BUFFER_SIZE_SAMPLES / 2;
+                    size_t destIndex = 0;
+
+                    // Uzupełniamy aktywną połówkę bufora danymi z kolejki – przekształcamy ze standardu [L,R] do [L, 0, R, 0]
+                    while (destIndex < destSamples)
+                    {
+                        if (currentChunkData == NULL || currentChunkRemaining == 0)
+                        {
+                            if (xQueueReceive(PlayingQueueHandle, &currentChunk, portMAX_DELAY) == pdTRUE)
+                            {
+                                if (currentChunk.data == NULL || currentChunk.length == 0)
+                                {
+                                    playingComplete = 1;
+                                    break;
+                                }
+                                currentChunkData    = currentChunk.data;
+                                currentChunkRemaining = currentChunk.length;
+                                currentPosInChunk   = 0;
+                            }
+                        }
+
+                        if (currentChunkRemaining >= 2 && (destIndex + 4) <= destSamples)
+                        {
+                            dest[destIndex]     = currentChunkData[currentPosInChunk];
+                            dest[destIndex + 1] = 0;
+                            dest[destIndex + 2] = currentChunkData[currentPosInChunk + 1];
+                            dest[destIndex + 3] = 0;
+
+                            currentPosInChunk += 2;
+                            currentChunkRemaining -= 2;
+                            destIndex += 4;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+
+                    // Uzupełnienie reszty aktywnej połówki bufora zerami, jeśli nie udało się jej całkowicie wypełnić
+                    for (; destIndex < destSamples; destIndex++)
+                    {
+                        dest[destIndex] = 0;
+                    }
+
+                    // Resetujemy flagę, aby DMA mogło przekazać informację o kolejnej wolnej połowie
+                    audio_tx_buffer_state = BUFFER_OFFSET_NONE;
+                }
+
+                // Zakończenie transmisji – zatrzymujemy DMA
+                HAL_SAI_DMAStop(&haudio_out_sai);
+            }
+        }
+    }
 }
 
 
@@ -492,15 +854,6 @@ void Sai_In_MspInit(SAI_HandleTypeDef *hsai)
 
 
 
-void CodekInit(AUDIO_DrvTypeDef  *audio_drv, uint32_t AudioFreq)
-{
-    audio_drv->Reset(AUDIO_I2C_ADDRESS);
-
-    /* Inicjalizacja kodeka */
-    audio_drv->Init(AUDIO_I2C_ADDRESS, INPUT_DEVICE_INPUT_LINE_1 | OUTPUT_DEVICE_HEADPHONE, 100, AudioFreq);
-
-}
-
 
 void AudioInit(uint32_t AudioFreq)
 {
@@ -516,100 +869,72 @@ void AudioInit(uint32_t AudioFreq)
     }
     SAIx_Out_Init(AudioFreq);
     SAIx_In_Init(AudioFreq);
-    CodekInit(audio_drv, AudioFreq);
 
 }
 
 
-/* USER CODE BEGIN Header_StartRecordTask */
+
+
+
+
 /**
-* @brief Function implementing the Record_Task thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartRecordTask */
-void StartRecord_Task(void const * argument)
-{
-    int recordingComplete = 0;
-    HAL_StatusTypeDef res;
-    xRecordingTaskHandle = xTaskGetCurrentTaskHandle();
-    AudioChunk_t chunk;
+ * @brief Inicjalizacja modułu audio
+ */
+void Audio_passThrough(void) {
 
-    for (;;)
+
+    /* Initialize the codec */
+	AudioInit(frequency);
+
+    if (HAL_SAI_Receive_DMA(&haudio_in_sai, (uint8_t*)record_buffer, BUFFER_SIZE_SAMPLES))
     {
-        TickType_t startTime = xTaskGetTickCount();
-        TickType_t stopTime = startTime + pdMS_TO_TICKS(60000);
-        recordingComplete = 0;
-        audio_rec_buffer_state = BUFFER_OFFSET_NONE;
-
-        if (xSemaphoreTake(StartRecordingSemaphoreHandle, portMAX_DELAY) == pdTRUE) {
-
-            // Initialize the DMA to receive and transmit audio data
-            if (HAL_SAI_Receive_DMA(&haudio_in_sai, (uint8_t*)record_buffer, BUFFER_SIZE_SAMPLES) != HAL_OK)
-            {
-                Error_Handler();
-            }
-            if (HAL_SAI_Transmit_DMA(&haudio_out_sai, (uint8_t*)play_buffer, BUFFER_SIZE_SAMPLES) != HAL_OK)
-            {
-                Error_Handler();
-                return;
-            }
-
-            while (!recordingComplete)
-            {
-                ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(portMAX_DELAY)); // Block until notified
-
-                if (audio_rec_buffer_state != BUFFER_OFFSET_NONE)
-                {
-            		HAL_GPIO_WritePin(LED_G_GPIO_Port, LED_G_Pin, GPIO_PIN_SET);
-                    int16_t* source_ptr = NULL;
-
-                    if (audio_rec_buffer_state == BUFFER_OFFSET_HALF)
-                    {
-                        source_ptr = &record_buffer[0];
-                    }
-                    else if (audio_rec_buffer_state == BUFFER_OFFSET_FULL)
-                    {
-                        source_ptr = &record_buffer[BUFFER_SIZE_SAMPLES / 2];
-                    }
-
-                    // Skopiuj tylko slot 0 i 2 (L i R)
-                    size_t out_idx = 0;
-                    for (size_t i = 0; i < BUFFER_SIZE_SAMPLES / 2; i += 4)
-                    {
-                        compressed_buffer[out_idx++] = source_ptr[i];     // slot 0 - Left
-                        compressed_buffer[out_idx++] = source_ptr[i + 2]; // slot 2 - Right
-                    }
-
-                    chunk.data = compressed_buffer;
-                    chunk.length = out_idx; // liczba próbek stereo
-
-                    xQueueSend(AudioQueueHandle, &chunk, portMAX_DELAY);
-                    audio_rec_buffer_state = BUFFER_OFFSET_NONE;
-
-                    if (xTaskGetTickCount() >= stopTime)
-                    {
-
-                    	for(int i=0; i<10; i++)
-                    	{
-                    		HAL_GPIO_TogglePin(LED_G_GPIO_Port, LED_G_Pin);
-                    		osDelay(330);
-                    		HAL_GPIO_TogglePin(LED_G_GPIO_Port, LED_G_Pin);
-                    	}
-
-                        HAL_SAI_DMAStop(&haudio_in_sai);
-                        HAL_SAI_DMAStop(&haudio_out_sai);
-                		HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_R_Pin, GPIO_PIN_RESET);
-
-                        recordingComplete = 1;
-                        break;
-                    }
-                }
-            }
-
-            // Send end signal to the queue
-            AudioChunk_t endSignal = { .data = NULL, .length = 0 };
-            xQueueSend(AudioQueueHandle, &endSignal, portMAX_DELAY);
-        }
+    	Error_Handler();
+        return 1;
     }
+
+
+    if (HAL_SAI_Transmit_DMA(&haudio_out_sai, (uint8_t*) play_buffer, BUFFER_SIZE_SAMPLES) !=  HAL_OK)
+    {
+    	Error_Handler();
+        return 1;
+
+    }
+
+
+
+    printf("Audio initialized successfully!\n");
+
+    audio_rec_buffer_state = BUFFER_OFFSET_NONE;
+     while (1)
+     {
+         /* 1st or 2nd half of the record buffer ready for being copied
+         to the Playback buffer */
+         if (audio_rec_buffer_state != BUFFER_OFFSET_NONE)
+         {
+             /* Copy half of the record buffer to the playback buffer */
+       	  if (audio_rec_buffer_state == BUFFER_OFFSET_HALF)
+       	  {
+
+       	      CopyBuffer(&play_buffer[0],
+       	    		  	 &record_buffer[0],
+					     BUFFER_SIZE_SAMPLES / 2);
+
+
+       	  } else {
+       	      /* if(audio_rec_buffer_state == BUFFER_OFFSET_FULL) */
+       	      CopyBuffer(&play_buffer[BUFFER_SIZE_SAMPLES / 2],
+       	                 &record_buffer[BUFFER_SIZE_SAMPLES / 2],
+						 BUFFER_SIZE_SAMPLES / 2);
+
+       	  }
+             /* Wait for next data */
+             audio_rec_buffer_state = BUFFER_OFFSET_NONE;
+         }
+         if (audio_tx_buffer_state)
+         {
+             audio_tx_buffer_state = 0;
+         }
+     } // end while(1)
 }
+
+

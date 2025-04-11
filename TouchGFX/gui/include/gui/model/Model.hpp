@@ -14,6 +14,9 @@ public:
     }
 
     void tick();
+    void StartRecording();
+    void StopRecording();
+    void StartPlaying();
 protected:
     ModelListener* modelListener;
 };

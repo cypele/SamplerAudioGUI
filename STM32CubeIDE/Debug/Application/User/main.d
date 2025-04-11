@@ -68,7 +68,8 @@ Application/User/main.o: \
  ../../LIBJPEG/Target/jconfig.h ../../LIBJPEG/Target/jdata_conf.h \
  ../../LIBJPEG/Target/jmorecfg.h ../../TouchGFX/App/app_touchgfx.h \
  ../../Drivers/BSP/Components/Common/../mx25l512/mx25l512.h \
- ../../Drivers/BSP/Components/Common/../otm8009a/otm8009a.h
+ ../../Drivers/BSP/Components/Common/../otm8009a/otm8009a.h \
+ ../../Core/Inc/My_Audio.h ../../Core/Inc/main.h ../../Core/Inc/audio.h
 ../../Core/Inc/main.h:
 ../../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal.h:
 ../../Core/Inc/stm32f7xx_hal_conf.h:
@@ -144,3 +145,6 @@ Application/User/main.o: \
 ../../TouchGFX/App/app_touchgfx.h:
 ../../Drivers/BSP/Components/Common/../mx25l512/mx25l512.h:
 ../../Drivers/BSP/Components/Common/../otm8009a/otm8009a.h:
+../../Core/Inc/My_Audio.h:
+../../Core/Inc/main.h:
+../../Core/Inc/audio.h:

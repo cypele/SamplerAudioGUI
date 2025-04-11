@@ -6,7 +6,7 @@
         "Components": [
           {
             "Type": "ScalableImage",
-            "Name": "scalableImage1",
+            "Name": "background",
             "Width": 800,
             "Height": 480,
             "Filename": "__generated\\alternate_theme_images_backgrounds_800x480_gradient_dark.png",
@@ -14,15 +14,15 @@
           },
           {
             "Type": "ButtonWithIcon",
-            "Name": "buttonWithIcon1_1",
-            "X": 149,
+            "Name": "PlayButton",
+            "X": 111,
             "Y": 196,
             "Width": 110,
             "Height": 50,
             "Pressed": "__generated\\alternate_theme_images_widgets_button_regular_height_50_tiny_round_disabled.png",
             "Released": "__generated\\alternate_theme_images_widgets_button_regular_height_50_tiny_round_disabled.png",
-            "IconPressed": "__generated\\icon_theme_images_action_done_50_50_E8F6FB.svg.png",
-            "IconReleased": "__generated\\icon_theme_images_action_done_50_50_E8F6FB.svg.png",
+            "IconPressed": "__generated\\icon_theme_images_av_play_circle_filled_50_50_ED0202.svg.png",
+            "IconReleased": "__generated\\icon_theme_images_av_play_circle_filled_50_50_1B8207.svg.png",
             "IconX": 30,
             "IconHeight": 50,
             "IconWidth": 50,
@@ -30,22 +30,72 @@
           },
           {
             "Type": "ButtonWithIcon",
-            "Name": "buttonWithIcon1",
-            "X": 526,
+            "Name": "RecordButton",
+            "X": 375,
             "Y": 196,
             "Width": 110,
             "Height": 50,
             "Pressed": "__generated\\alternate_theme_images_widgets_button_regular_height_50_tiny_round_disabled.png",
             "Released": "__generated\\alternate_theme_images_widgets_button_regular_height_50_tiny_round_disabled.png",
-            "IconPressed": "__generated\\icon_theme_images_action_done_50_50_E8F6FB.svg.png",
-            "IconReleased": "__generated\\icon_theme_images_action_done_50_50_E8F6FB.svg.png",
+            "IconPressed": "__generated\\icon_theme_images_image_circle_50_50_FF082D.svg.png",
+            "IconReleased": "__generated\\icon_theme_images_image_circle_50_50_E8F6FB.svg.png",
+            "IconX": 30,
+            "IconHeight": 50,
+            "IconWidth": 50,
+            "Preset": "alternate_theme\\presets\\button\\regular\\height_50\\tiny_round_disabled.json"
+          },
+          {
+            "Type": "ButtonWithIcon",
+            "Name": "StopButton",
+            "X": 551,
+            "Y": 196,
+            "Width": 110,
+            "Height": 50,
+            "Pressed": "__generated\\alternate_theme_images_widgets_button_regular_height_50_tiny_round_disabled.png",
+            "Released": "__generated\\alternate_theme_images_widgets_button_regular_height_50_tiny_round_disabled.png",
+            "IconPressed": "__generated\\icon_theme_images_av_stop_circle_50_50_ED0202.svg.png",
+            "IconReleased": "__generated\\icon_theme_images_av_stop_circle_50_50_E8F6FB.svg.png",
             "IconX": 30,
             "IconHeight": 50,
             "IconWidth": 50,
             "Preset": "alternate_theme\\presets\\button\\regular\\height_50\\tiny_round_disabled.json"
           }
         ],
-        "Interactions": []
+        "Interactions": [
+          {
+            "InteractionName": "Interaction1",
+            "Trigger": {
+              "Type": "TriggerClicked",
+              "TriggerComponent": "StopButton"
+            },
+            "Action": {
+              "Type": "ActionExecuteCode",
+              "Code": "presenter->swButtonStopSemaphoreGive();"
+            }
+          },
+          {
+            "InteractionName": "Interaction2",
+            "Trigger": {
+              "Type": "TriggerClicked",
+              "TriggerComponent": "RecordButton"
+            },
+            "Action": {
+              "Type": "ActionExecuteCode",
+              "Code": "presenter->swButtonRecordSemaphoreGive();"
+            }
+          },
+          {
+            "InteractionName": "Interaction3",
+            "Trigger": {
+              "Type": "TriggerClicked",
+              "TriggerComponent": "PlayButton"
+            },
+            "Action": {
+              "Type": "ActionExecuteCode",
+              "Code": "presenter->swButtonPlaySemaphoreGive();"
+            }
+          }
+        ]
       }
     ],
     "CustomContainerDefinitions": [],

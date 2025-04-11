@@ -26,7 +26,6 @@ FIL SDFile;       /* File object for SD */
 /* USER CODE BEGIN Variables */
 
 /* USER CODE END Variables */
-
 void MX_FATFS_Init(void)
 {
   /*## FatFS: Link the SD driver ###########################*/

@@ -11,69 +11,49 @@
 #include "stdio.h"
 #include "main.h"
 #include "fatfs.h"
+#include "My_Audio.h"
 #include "cmsis_os.h"
 #include <stdbool.h>
 
-extern osMessageQId AudioQueueHandle;
+extern osMessageQId PlayingQueueHandle;
+extern osMessageQId CommandSDQueueHandle;
+extern osMessageQId RecordingQueueHandle;
+
+extern SemaphoreHandle_t StartSavingSemaphoreHandle;
+extern SemaphoreHandle_t StartPlayingSemaphoreHandle;
+
 
 char *filename = NULL;
 int receivedData;
 
-WAV_Header header;
 UINT byteswritten;
-
-
+UINT bytesRead;
+WAV_Header header;
 
 /* Private function prototypes -----------------------------------------------*/
-void StartSDCardTask(void const * argument);
+void StartSd_Task(void const * argument);
 int GetAvailableFilename(FRESULT res, FILINFO fno );
 void StartSDdCardTask(void const * argument);
 void FillWavHeader(WAV_Header* header, uint32_t sampleRate, uint16_t bitsPerSample, uint16_t numChannels, uint32_t dataSize);
 
 
-
-
-
-
-
-
-
-void StartSDCardTask(void const * argument)
+void StartPlayAndReadTask(void const * argument)
 {
     char filename[32];
     FRESULT res;
-    AudioChunk_t receivedChunk;
-    bool recordingInProgress = true; // Flag to track if recording is in progress
+    AudioChunk_t chunk;
+    Audio_SdCard_Command_t command;
 
     for (;;)
     {
-        // Wait for data in the queue
-        if (xQueueReceive(AudioQueueHandle, &receivedChunk, portMAX_DELAY) == pdTRUE)
+        // Czekamy na komendę z CommandQueueHandle
+        if (xQueueReceive(CommandSDQueueHandle, &command, portMAX_DELAY) == pdTRUE)
         {
-            // Check if we received the NULL pointer signaling end of recording
-            if (receivedChunk.data == NULL && recordingInProgress)
+            if (command == CMD_START_RECORDING)
             {
-                // Prepare and write the correct WAV header
-                uint32_t fileSize = f_size(&SDFile);
-                WAV_Header finalHeader;
-                FillWavHeader(&finalHeader, 44100, 16, 2, fileSize - sizeof(WAV_Header)); // sample rate, bits, channels
+                bool recordingInProgress = true;
 
-                // Write the correct WAV header (now with the correct size values)
-                UINT headerWritten;
-                f_lseek(&SDFile, 0);  // Go back to the beginning of the file to write the updated header
-                f_write(&SDFile, &finalHeader, sizeof(WAV_Header), &headerWritten);
-
-                // Final cleanup
-                UpdateWavHeader(&SDFile); // Update chunk sizes before closing
-                f_close(&SDFile);  // Close the file when the end of recording is signaled
-                HAL_GPIO_TogglePin(LED_G_GPIO_Port, LED_G_Pin);
-                recordingInProgress = false;
-                continue;
-            }
-
-            // If the file is not open, open it
-            if (SDFile.obj.fs == NULL)
-            {
+                // Inicjalizacja SD, tworzenie pliku
                 if (f_mount(&SDFatFS, (TCHAR const*)SDPath, 1) != FR_OK)
                     Error_Handler();
 
@@ -81,137 +61,96 @@ void StartSDCardTask(void const * argument)
                 if (f_open(&SDFile, filename, FA_CREATE_ALWAYS | FA_WRITE) != FR_OK)
                     Error_Handler();
 
-                // Write dummy WAV header (we'll fix it at the end)
+                // Dummy header
+                WAV_Header header;
+                FillWavHeader(&header, 44100, 16, 2, 0);
+                UINT byteswritten = 0;
                 res = f_write(&SDFile, &header, sizeof(WAV_Header), &byteswritten);
-                if ((byteswritten != sizeof(WAV_Header)) || (res != FR_OK))
-                {
+                if (res != FR_OK || byteswritten != sizeof(WAV_Header))
                     Error_Handler();
-                }
-            }
 
-            // Write audio chunk
-            res = f_write(&SDFile, receivedChunk.data, receivedChunk.length * sizeof(int16_t), &byteswritten);
-            if (res != FR_OK || byteswritten == 0)
-                Error_Handler();
-        }
-    }
-}
-
-
-
-
-
-
-/* USER CODE BEGIN Header_StartSDCardTask */
-/**
-  * @brief  Function implementing the SDCardTask thread.
-  * @param  argument: Not used
-  * @retval None
-  */
-/* USER CODE END Header_StartSDCardTask */
-
-void StartSDdCardTask(void const * argument)
-{
-    FRESULT res;
-    UINT byteswritten, bytesread;
-    uint8_t rtext[_MAX_SS];
-
-    uint32_t numSamples = SAMPLE_RATE * DURATION_SEC;
-    int16_t high = 100;
-    int16_t low = -100;
-    int samplesPerCycle = SAMPLE_RATE / 1000;
-    int halfCycle = samplesPerCycle / 2;
-    int16_t buffer[samplesPerCycle];
-
-    // Wypełnienie bufora próbki (fale kwadratowe)
-    for (int i = 0; i < samplesPerCycle; i++) {
-        buffer[i] = (i < halfCycle) ? high : low;
-    }
-    uint32_t totalSamplesWritten = 0;
-
-
-
-    /* Infinite loop */
-    for(;;)
-    {
-        if(xQueueReceive(AudioQueueHandle, &receivedData, portMAX_DELAY))
-        {
-            if (f_mount(&SDFatFS, (TCHAR const*)SDPath, 0) != FR_OK)
-            {
-                if(f_mkfs((TCHAR const*)SDPath, FM_ANY, 0, rtext, sizeof(rtext)) != FR_OK)
+                while (recordingInProgress)
                 {
-                    Error_Handler();
-                }
-            }
-            else
-            {
-            	GenerateNextFilename(filename);
-                if(f_open(&SDFile, filename, FA_CREATE_ALWAYS | FA_WRITE) != FR_OK)
-                {
-                    Error_Handler();
-                }
-                else
-                {
-                    // Zapisz nagłówek WAV
-                    res = f_write(&SDFile, &header, sizeof(WAV_Header), &byteswritten);
-                    if ((byteswritten == 0) || (res != FR_OK))
+                    if (xQueueReceive(RecordingQueueHandle, &chunk, portMAX_DELAY) == pdTRUE)
                     {
-                        Error_Handler();
-                    }
+                        if (chunk.data == NULL)
+                        {
+                            // Zakończenie nagrywania
+                            uint32_t fileSize = f_size(&SDFile);
+                            WAV_Header finalHeader;
+                            FillWavHeader(&finalHeader, 44100, 16, 2, fileSize - sizeof(WAV_Header));
 
-                    // Zapis danych audio
-                    while (totalSamplesWritten < numSamples)
-                    {
-                        uint32_t samplesToWrite = (numSamples - totalSamplesWritten) < samplesPerCycle * 1000 ?
-                                                    (numSamples - totalSamplesWritten) :
-                                                    samplesPerCycle * 1000;
+                            UINT headerWritten;
+                            f_lseek(&SDFile, 0);
+                            f_write(&SDFile, &finalHeader, sizeof(WAV_Header), &headerWritten);
+                            UpdateWavHeader(&SDFile);
+                            f_close(&SDFile);
+                            HAL_GPIO_TogglePin(LED_G_GPIO_Port, LED_G_Pin);
 
-                        for (uint32_t i = 0; i < samplesToWrite / samplesPerCycle; i++) {
-                            res = f_write(&SDFile, buffer, sizeof(buffer), &byteswritten);
-                            if (res != FR_OK || byteswritten == 0)
-                            {
-                                Error_Handler();
-                            }
+                            recordingInProgress = false;
                         }
-
-                        totalSamplesWritten += samplesToWrite;
+                        else
+                        {
+                            res = f_write(&SDFile, chunk.data, chunk.length * sizeof(int16_t), &byteswritten);
+                            if (res != FR_OK || byteswritten == 0)
+                                Error_Handler();
+                        }
                     }
-
-                    // Po zapisaniu danych audio, zaktualizuj nagłówek WAV
-                    uint32_t fileSize = f_size(&SDFile);  // Całkowity rozmiar pliku
-                    uint32_t dataSize = fileSize - sizeof(WAV_Header);  // Rozmiar danych (po odjęciu nagłówka)
-
-                    // Zaktualizowanie chunkSize w nagłówku WAV
-                    res = f_lseek(&SDFile, 4);  // Przesuń na miejsce chunkSize (offset 4)
-                    if (res != FR_OK) {
-                        Error_Handler();
-                    }
-
-                    res = f_write(&SDFile, &fileSize, sizeof(uint32_t), &byteswritten);
-                    if (res != FR_OK || byteswritten == 0) {
-                        Error_Handler();
-                    }
-
-                    // Zaktualizowanie subchunk2Size w nagłówku WAV
-                    res = f_lseek(&SDFile, 40);  // Przesuń na miejsce subchunk2Size (offset 40)
-                    if (res != FR_OK) {
-                        Error_Handler();
-                    }
-
-                    res = f_write(&SDFile, &dataSize, sizeof(uint32_t), &byteswritten);
-                    if (res != FR_OK || byteswritten == 0) {
-                        Error_Handler();
-                    }
-
-                    f_close(&SDFile);
                 }
+            }
+
+            else if (command == CMD_START_PLAYING)
+            {
+                // Otwórz ostatni plik do odtwarzania
+                if (f_mount(&SDFatFS, (TCHAR const*)SDPath, 1) != FR_OK)
+                    Error_Handler();
+
+                if (f_open(&SDFile, "AUDIO041.WAV", FA_READ) != FR_OK)
+                    Error_Handler();
+
+                // Pomiń nagłówek WAV
+                f_lseek(&SDFile, sizeof(WAV_Header));
+
+                // Zdefiniuj dwa oddzielne bufory do odczytu (double buffering)
+                static int16_t playbackBuffer0[BUFFER_SIZE_SAMPLES];
+                static int16_t playbackBuffer1[BUFFER_SIZE_SAMPLES];
+                int currentBufferIdx = 0; // przełącznik między 0 a 1
+
+                // Odczytaj i wysyłaj dane do PlayingQueueHandle
+                for (;;)
+                {
+                    UINT bytesread = 0;
+                    int16_t* currentBuffer = (currentBufferIdx == 0) ? playbackBuffer0 : playbackBuffer1;
+
+                    // Odczytujemy pełny bufor
+                    FRESULT res = f_read(&SDFile, currentBuffer, sizeof(playbackBuffer0), &bytesread);
+                    if (res != FR_OK)
+                        Error_Handler();
+
+                    // Jeżeli nie ma już danych (EOF) - wyślij sygnał końca odtwarzania
+                    if (bytesread == 0)
+                        break;
+
+                    AudioChunk_t chunk;
+                    chunk.data = currentBuffer;
+                    chunk.length = bytesread / sizeof(int16_t);
+
+                    // Wysyłamy odczytany chunk do kolejki.
+                    xQueueSend(PlayingQueueHandle, &chunk, portMAX_DELAY);
+
+                    // Przełączamy bufor, aby nie nadpisać jeszcze nieprzetworzonych danych
+                    currentBufferIdx ^= 1;
+                }
+
+                // Sygnał końca odtwarzania
+                AudioChunk_t endChunk = { .data = NULL, .length = 0 };
+                xQueueSend(PlayingQueueHandle, &endChunk, portMAX_DELAY);
+
+                f_close(&SDFile);
             }
         }
     }
-
 }
-
-
 
 
 void GenerateNextFilename(char* filenameBuffer)
@@ -226,6 +165,15 @@ void GenerateNextFilename(char* filenameBuffer)
     } while (res == FR_OK && fileIndex < 1000); // Sprawdź do AUDIO999.WAV
 }
 
+void GetLatestFilename(char* filenameBuffer)
+{
+    FILINFO fno;
+    for (int i = 999; i >= 1; i--) {
+        sprintf(filenameBuffer, "AUDIO%03d.WAV", i);
+        if (f_stat(filenameBuffer, &fno) == FR_OK) return;
+    }
+    strcpy(filenameBuffer, "AUDIO001.WAV"); // jeśli nic nie ma
+}
 
 
 /**

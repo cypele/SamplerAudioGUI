@@ -16,12 +16,17 @@
 ../../Middlewares/ST/touchgfx/framework/include/touchgfx/Screen.hpp:144:18:virtual void touchgfx::Screen::handleTickEvent()	1
 ../../Middlewares/ST/touchgfx/framework/include/touchgfx/Screen.hpp:154:18:virtual void touchgfx::Screen::handleKeyEvent(uint8_t)	1
 ../../Middlewares/ST/touchgfx/framework/include/mvp/View.hpp:36:7:touchgfx::View<Screen1Presenter>::~View()	1
-C:/TouchGFXProjects/SamplerAudio1/TouchGFX/generated/gui_generated/src/screen1_screen/Screen1ViewBase.cpp:30:1:Screen1ViewBase::~Screen1ViewBase()	1
-C:/TouchGFXProjects/SamplerAudio1/TouchGFX/generated/gui_generated/src/screen1_screen/Screen1ViewBase.cpp:35:6:virtual void Screen1ViewBase::setupScreen()	1
+../../Middlewares/ST/touchgfx/framework/include/touchgfx/Callback.hpp:357:8:touchgfx::Callback<Screen1ViewBase, const touchgfx::AbstractButton&>::~Callback()	1
+C:/TouchGFXProjects/SamplerAudio1/TouchGFX/generated/gui_generated/src/screen1_screen/Screen1ViewBase.cpp:39:1:Screen1ViewBase::~Screen1ViewBase()	1
+C:/TouchGFXProjects/SamplerAudio1/TouchGFX/generated/gui_generated/src/screen1_screen/Screen1ViewBase.cpp:44:6:virtual void Screen1ViewBase::setupScreen()	1
+../../Middlewares/ST/touchgfx/framework/include/touchgfx/Callback.hpp:386:18:void touchgfx::Callback<dest_type, T1, void, void>::execute(T1) [with dest_type = Screen1ViewBase; T1 = const touchgfx::AbstractButton&]	2
+../../Middlewares/ST/touchgfx/framework/include/touchgfx/Callback.hpp:396:18:bool touchgfx::Callback<dest_type, T1, void, void>::isValid() const [with dest_type = Screen1ViewBase; T1 = const touchgfx::AbstractButton&]	3
 ../../Middlewares/ST/touchgfx/framework/include/mvp/View.hpp:36:7:virtual touchgfx::View<Screen1Presenter>::~View()	1
-C:/TouchGFXProjects/SamplerAudio1/TouchGFX/generated/gui_generated/src/screen1_screen/Screen1ViewBase.cpp:30:1:virtual Screen1ViewBase::~Screen1ViewBase()	1
+../../Middlewares/ST/touchgfx/framework/include/touchgfx/Callback.hpp:357:8:virtual touchgfx::Callback<Screen1ViewBase, const touchgfx::AbstractButton&>::~Callback()	1
+C:/TouchGFXProjects/SamplerAudio1/TouchGFX/generated/gui_generated/src/screen1_screen/Screen1ViewBase.cpp:39:1:virtual Screen1ViewBase::~Screen1ViewBase()	1
 ../../Middlewares/ST/touchgfx/framework/include/touchgfx/Drawable.hpp:121:18:virtual void touchgfx::Drawable::invalidateContent() const	2
 ../../Middlewares/ST/touchgfx/framework/include/touchgfx/widgets/Widget.hpp:45:18:virtual void touchgfx::Widget::getLastChild(int16_t, int16_t, touchgfx::Drawable**)	3
+C:/TouchGFXProjects/SamplerAudio1/TouchGFX/generated/gui_generated/src/screen1_screen/Screen1ViewBase.cpp:49:6:void Screen1ViewBase::buttonCallbackHandler(const touchgfx::AbstractButton&)	4
 ../../Middlewares/ST/touchgfx/framework/include/touchgfx/Drawable.hpp:343:10:void touchgfx::Drawable::setXY(int16_t, int16_t)	1
 ../../Middlewares/ST/touchgfx/framework/include/touchgfx/Drawable.hpp:233:10:void touchgfx::Drawable::setPosition(int16_t, int16_t, int16_t, int16_t)	1
 C:/TouchGFXProjects/SamplerAudio1/TouchGFX/generated/gui_generated/src/screen1_screen/Screen1ViewBase.cpp:8:1:Screen1ViewBase::Screen1ViewBase()	1

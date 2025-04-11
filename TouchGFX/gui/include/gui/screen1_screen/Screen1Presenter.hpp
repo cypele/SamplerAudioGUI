@@ -26,7 +26,9 @@ public:
     virtual void deactivate();
 
     virtual ~Screen1Presenter() {}
-
+    void swButtonRecordSemaphoreGive();
+    void swButtonStopSemaphoreGive();
+    void swButtonPlaySemaphoreGive();
 private:
     Screen1Presenter();
 

@@ -1,0 +1,6 @@
+../Application/User/wm8994_initialization.c:318:6:I2C4_AudioInit	48	static
+../Application/User/wm8994_initialization.c:134:9:WriteCodecRegister_WithVeriy	32	static
+../Application/User/wm8994_initialization.c:177:19:WM8994_WriteRegister	32	static
+../Application/User/wm8994_initialization.c:202:10:wm8994_SetMute	16	static
+../Application/User/wm8994_initialization.c:233:10:wm8994_SetVolume	24	static
+../Application/User/wm8994_initialization.c:33:9:wm8994_Init	16	static

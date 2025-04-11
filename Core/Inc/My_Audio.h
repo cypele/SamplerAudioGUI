@@ -9,8 +9,7 @@
 #define MY_AUDIO_H
 
 #include "stdint.h"
-#include "wm8994.h"
-
+#include "main.h"
 // **Definicje konfiguracyjne**
 #define BUFFER_SIZE_SAMPLES     4096  // Liczba próbek audio
 #define DMA_BYTES_PER_FRAME     8     // Liczba bajtów na ramkę DMA
@@ -36,6 +35,11 @@
 #define DEFAULT_AUDIO_IN_CHANNEL_NBR        ((uint8_t)2)
 #define DEFAULT_AUDIO_IN_VOLUME             ((uint16_t)64)
 
+
+#define VOLUME_CONVERT(Volume)        (((Volume) > 100)? 100:((uint8_t)(((Volume) * 63) / 100)))
+#define VOLUME_IN_CONVERT(Volume)     (((Volume) >= 100)? 239:((uint8_t)(((Volume) * 240) / 100)))
+#define AUDIO_MUTE_ON                 1
+#define AUDIO_MUTE_OFF                0
 
 
 

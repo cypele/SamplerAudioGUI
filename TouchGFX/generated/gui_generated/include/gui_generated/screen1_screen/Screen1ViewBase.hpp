@@ -27,11 +27,22 @@ protected:
      * Member Declarations
      */
     touchgfx::Box __background;
-    touchgfx::ScalableImage scalableImage1;
-    touchgfx::ButtonWithIcon buttonWithIcon1_1;
-    touchgfx::ButtonWithIcon buttonWithIcon1;
+    touchgfx::ScalableImage background;
+    touchgfx::ButtonWithIcon PlayButton;
+    touchgfx::ButtonWithIcon RecordButton;
+    touchgfx::ButtonWithIcon StopButton;
 
 private:
+
+    /*
+     * Callback Declarations
+     */
+    touchgfx::Callback<Screen1ViewBase, const touchgfx::AbstractButton&> buttonCallback;
+
+    /*
+     * Callback Handler Declarations
+     */
+    void buttonCallbackHandler(const touchgfx::AbstractButton& src);
 
 };
 

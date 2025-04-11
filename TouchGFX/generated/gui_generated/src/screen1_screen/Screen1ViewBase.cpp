@@ -5,26 +5,35 @@
 #include <touchgfx/Color.hpp>
 #include <images/BitmapDatabase.hpp>
 
-Screen1ViewBase::Screen1ViewBase()
+Screen1ViewBase::Screen1ViewBase() :
+    buttonCallback(this, &Screen1ViewBase::buttonCallbackHandler)
 {
     __background.setPosition(0, 0, 800, 480);
     __background.setColor(touchgfx::Color::getColorFromRGB(0, 0, 0));
     add(__background);
 
-    scalableImage1.setBitmap(touchgfx::Bitmap(BITMAP_ALTERNATE_THEME_IMAGES_BACKGROUNDS_800X480_GRADIENT_DARK_ID));
-    scalableImage1.setPosition(0, 0, 800, 480);
-    scalableImage1.setScalingAlgorithm(touchgfx::ScalableImage::NEAREST_NEIGHBOR);
-    add(scalableImage1);
+    background.setBitmap(touchgfx::Bitmap(BITMAP_ALTERNATE_THEME_IMAGES_BACKGROUNDS_800X480_GRADIENT_DARK_ID));
+    background.setPosition(0, 0, 800, 480);
+    background.setScalingAlgorithm(touchgfx::ScalableImage::NEAREST_NEIGHBOR);
+    add(background);
 
-    buttonWithIcon1_1.setXY(149, 196);
-    buttonWithIcon1_1.setBitmaps(touchgfx::Bitmap(BITMAP_ALTERNATE_THEME_IMAGES_WIDGETS_BUTTON_REGULAR_HEIGHT_50_TINY_ROUND_DISABLED_ID), touchgfx::Bitmap(BITMAP_ALTERNATE_THEME_IMAGES_WIDGETS_BUTTON_REGULAR_HEIGHT_50_TINY_ROUND_DISABLED_ID), touchgfx::Bitmap(BITMAP_ICON_THEME_IMAGES_ACTION_DONE_50_50_E8F6FB_SVG_ID), touchgfx::Bitmap(BITMAP_ICON_THEME_IMAGES_ACTION_DONE_50_50_E8F6FB_SVG_ID));
-    buttonWithIcon1_1.setIconXY(30, 0);
-    add(buttonWithIcon1_1);
+    PlayButton.setXY(111, 196);
+    PlayButton.setBitmaps(touchgfx::Bitmap(BITMAP_ALTERNATE_THEME_IMAGES_WIDGETS_BUTTON_REGULAR_HEIGHT_50_TINY_ROUND_DISABLED_ID), touchgfx::Bitmap(BITMAP_ALTERNATE_THEME_IMAGES_WIDGETS_BUTTON_REGULAR_HEIGHT_50_TINY_ROUND_DISABLED_ID), touchgfx::Bitmap(BITMAP_ICON_THEME_IMAGES_AV_PLAY_CIRCLE_FILLED_50_50_1B8207_SVG_ID), touchgfx::Bitmap(BITMAP_ICON_THEME_IMAGES_AV_PLAY_CIRCLE_FILLED_50_50_ED0202_SVG_ID));
+    PlayButton.setIconXY(30, 0);
+    PlayButton.setAction(buttonCallback);
+    add(PlayButton);
 
-    buttonWithIcon1.setXY(526, 196);
-    buttonWithIcon1.setBitmaps(touchgfx::Bitmap(BITMAP_ALTERNATE_THEME_IMAGES_WIDGETS_BUTTON_REGULAR_HEIGHT_50_TINY_ROUND_DISABLED_ID), touchgfx::Bitmap(BITMAP_ALTERNATE_THEME_IMAGES_WIDGETS_BUTTON_REGULAR_HEIGHT_50_TINY_ROUND_DISABLED_ID), touchgfx::Bitmap(BITMAP_ICON_THEME_IMAGES_ACTION_DONE_50_50_E8F6FB_SVG_ID), touchgfx::Bitmap(BITMAP_ICON_THEME_IMAGES_ACTION_DONE_50_50_E8F6FB_SVG_ID));
-    buttonWithIcon1.setIconXY(30, 0);
-    add(buttonWithIcon1);
+    RecordButton.setXY(375, 196);
+    RecordButton.setBitmaps(touchgfx::Bitmap(BITMAP_ALTERNATE_THEME_IMAGES_WIDGETS_BUTTON_REGULAR_HEIGHT_50_TINY_ROUND_DISABLED_ID), touchgfx::Bitmap(BITMAP_ALTERNATE_THEME_IMAGES_WIDGETS_BUTTON_REGULAR_HEIGHT_50_TINY_ROUND_DISABLED_ID), touchgfx::Bitmap(BITMAP_ICON_THEME_IMAGES_IMAGE_CIRCLE_50_50_E8F6FB_SVG_ID), touchgfx::Bitmap(BITMAP_ICON_THEME_IMAGES_IMAGE_CIRCLE_50_50_FF082D_SVG_ID));
+    RecordButton.setIconXY(30, 0);
+    RecordButton.setAction(buttonCallback);
+    add(RecordButton);
+
+    StopButton.setXY(551, 196);
+    StopButton.setBitmaps(touchgfx::Bitmap(BITMAP_ALTERNATE_THEME_IMAGES_WIDGETS_BUTTON_REGULAR_HEIGHT_50_TINY_ROUND_DISABLED_ID), touchgfx::Bitmap(BITMAP_ALTERNATE_THEME_IMAGES_WIDGETS_BUTTON_REGULAR_HEIGHT_50_TINY_ROUND_DISABLED_ID), touchgfx::Bitmap(BITMAP_ICON_THEME_IMAGES_AV_STOP_CIRCLE_50_50_E8F6FB_SVG_ID), touchgfx::Bitmap(BITMAP_ICON_THEME_IMAGES_AV_STOP_CIRCLE_50_50_ED0202_SVG_ID));
+    StopButton.setIconXY(30, 0);
+    StopButton.setAction(buttonCallback);
+    add(StopButton);
 }
 
 Screen1ViewBase::~Screen1ViewBase()
@@ -35,4 +44,29 @@ Screen1ViewBase::~Screen1ViewBase()
 void Screen1ViewBase::setupScreen()
 {
 
+}
+
+void Screen1ViewBase::buttonCallbackHandler(const touchgfx::AbstractButton& src)
+{
+    if (&src == &StopButton)
+    {
+        //Interaction1
+        //When StopButton clicked execute C++ code
+        //Execute C++ code
+        presenter->swButtonStopSemaphoreGive();
+    }
+    if (&src == &RecordButton)
+    {
+        //Interaction2
+        //When RecordButton clicked execute C++ code
+        //Execute C++ code
+        presenter->swButtonRecordSemaphoreGive();
+    }
+    if (&src == &PlayButton)
+    {
+        //Interaction3
+        //When PlayButton clicked execute C++ code
+        //Execute C++ code
+        presenter->swButtonPlaySemaphoreGive();
+    }
 }

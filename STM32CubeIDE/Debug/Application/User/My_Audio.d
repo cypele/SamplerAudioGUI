@@ -1,7 +1,5 @@
 Application/User/My_Audio.o: ../Application/User/My_Audio.c \
- ../../Core/Inc/My_Audio.h ../../Core/Inc/wm8994.h \
- ../../Drivers/BSP/Components/Common/../Common/audio.h \
- ../../Core/Inc/main.h \
+ ../../Core/Inc/My_Audio.h ../../Core/Inc/main.h \
  ../../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal.h \
  ../../Core/Inc/stm32f7xx_hal_conf.h \
  ../../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_rcc.h \
@@ -57,10 +55,9 @@ Application/User/My_Audio.o: ../Application/User/My_Audio.c \
  ../../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h \
  ../../Middlewares/Third_Party/FreeRTOS/Source/include/semphr.h \
  ../../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h \
- ../../Middlewares/Third_Party/FreeRTOS/Source/include/task.h
+ ../../Middlewares/Third_Party/FreeRTOS/Source/include/task.h \
+ ../../Core/Inc/main.h ../../Core/Inc/audio.h ../../Core/Inc/Filter.h
 ../../Core/Inc/My_Audio.h:
-../../Core/Inc/wm8994.h:
-../../Drivers/BSP/Components/Common/../Common/audio.h:
 ../../Core/Inc/main.h:
 ../../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal.h:
 ../../Core/Inc/stm32f7xx_hal_conf.h:
@@ -118,3 +115,6 @@ Application/User/My_Audio.o: ../Application/User/My_Audio.c \
 ../../Middlewares/Third_Party/FreeRTOS/Source/include/semphr.h:
 ../../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h:
 ../../Middlewares/Third_Party/FreeRTOS/Source/include/task.h:
+../../Core/Inc/main.h:
+../../Core/Inc/audio.h:
+../../Core/Inc/Filter.h:

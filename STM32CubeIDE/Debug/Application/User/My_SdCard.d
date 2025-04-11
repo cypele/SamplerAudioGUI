@@ -63,7 +63,8 @@ Application/User/My_SdCard.o: ../Application/User/My_SdCard.c \
  ../../Middlewares/Third_Party/FatFs/src/ff_gen_drv.h \
  ../../Middlewares/Third_Party/FatFs/src/diskio.h \
  ../../Middlewares/Third_Party/FatFs/src/ff.h \
- ../../FATFS/Target/sd_diskio.h
+ ../../FATFS/Target/sd_diskio.h ../../Core/Inc/My_Audio.h \
+ ../../Core/Inc/main.h
 ../../Core/Inc/My_SdCard.h:
 ../../Core/Inc/main.h:
 ../../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal.h:
@@ -132,3 +133,5 @@ Application/User/My_SdCard.o: ../Application/User/My_SdCard.c \
 ../../Middlewares/Third_Party/FatFs/src/diskio.h:
 ../../Middlewares/Third_Party/FatFs/src/ff.h:
 ../../FATFS/Target/sd_diskio.h:
+../../Core/Inc/My_Audio.h:
+../../Core/Inc/main.h:

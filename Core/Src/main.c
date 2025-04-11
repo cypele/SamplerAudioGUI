@@ -28,10 +28,14 @@
 /* USER CODE BEGIN Includes */
 #include "../mx25l512/mx25l512.h"
 #include "../otm8009a/otm8009a.h"
+#include "My_Audio.h"
+#include "audio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+
+volatile uint32_t i2c_error_counter = 0;
 
 /* USER CODE END PTD */
 
@@ -61,10 +65,13 @@
 
 /* DISPLAY */
 #define LCD_ORIENTATION_LANDSCAPE 0x01
+#define AUDIO_I2C4_TIMEING                      ((uint32_t)0x40912732)
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
+extern uint32_t frequency;
 
 /* USER CODE END PM */
 
@@ -101,46 +108,72 @@ osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
   .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
+  .priority = (osPriority_t) osPriorityRealtime6,
 };
 /* Definitions for TouchGFXTask */
 osThreadId_t TouchGFXTaskHandle;
 const osThreadAttr_t TouchGFXTask_attributes = {
   .name = "TouchGFXTask",
   .stack_size = 4096 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
+  .priority = (osPriority_t) osPriorityRealtime2,
 };
 /* Definitions for videoTask */
 osThreadId_t videoTaskHandle;
 const osThreadAttr_t videoTask_attributes = {
   .name = "videoTask",
   .stack_size = 1000 * 4,
-  .priority = (osPriority_t) osPriorityLow,
+  .priority = (osPriority_t) osPriorityHigh,
 };
 /* Definitions for Record_Task */
-osThreadId_t Record_TaskHandle;
-const osThreadAttr_t Record_Task_attributes = {
-  .name = "Record_Task",
+osThreadId_t RecAndSaveTask_Handle;
+const osThreadAttr_t RecAndSaveTask_attributes = {
+  .name = "RecAndSaveTask",
   .stack_size = 2048 * 4,
+  .priority = (osPriority_t) osPriorityRealtime1,
+};
+/* Definitions for SD_Task */
+osThreadId_t PlayAndReadTaskHandle;
+const osThreadAttr_t PlayAndReadTask_attributes = {
+  .name = "PlayAndReadTask",
+  .stack_size = 1024 * 4,
   .priority = (osPriority_t) osPriorityHigh,
 };
 /* Definitions for AudioQueue */
-osMessageQueueId_t AudioQueueHandle;
-const osMessageQueueAttr_t AudioQueue_attributes = {
-  .name = "AudioQueue"
+osMessageQueueId_t RecordingQueueHandle;
+const osMessageQueueAttr_t RecordingQueue_attributes = {
+  .name = "RecordingQueue"
 };
-/* Definitions for StartRecordingSemaphore */
-osSemaphoreId_t StartRecordingSemaphoreHandle;
-const osSemaphoreAttr_t StartRecordingSemaphore_attributes = {
-  .name = "StartRecordingSemaphore"
+
+osMessageQueueId_t PlayingQueueHandle;
+const osMessageQueueAttr_t PlayingQueue_attributes = {
+  .name = "PlayingQueue"
 };
+
+
+osMessageQueueId_t CommandSDQueueHandle;
+const osMessageQueueAttr_t CommandSDQueue_attributes = {
+  .name = "CommandSDQueue"
+};
+
+osMessageQueueId_t CommandAudioQueueHandle;
+const osMessageQueueAttr_t CommandAudioQueue_attributes = {
+  .name = "CommandAudioQueue"
+};
+
+
 /* Definitions for StopRecordingSemaphore */
 osSemaphoreId_t StopRecordingSemaphoreHandle;
 const osSemaphoreAttr_t StopRecordingSemaphore_attributes = {
   .name = "StopRecordingSemaphore"
 };
+
 /* USER CODE BEGIN PV */
+/* Definitions for StopRecordingSemaphore */
+
+
+
 TaskHandle_t xRecordingTaskHandle;
+TaskHandle_t xPlayingTaskHandle;
 
 /* USER CODE END PV */
 
@@ -162,7 +195,8 @@ static void MX_SAI1_Init(void);
 void StartDefaultTask(void *argument);
 extern void TouchGFX_Task(void *argument);
 extern void videoTaskFunc(void *argument);
-extern void StartRecord_Task(void *argument);
+extern void StartRecAndSaveTask(void *argument);
+extern void StartPlayAndReadTask(void *argument);
 
 /* USER CODE BEGIN PFP */
 static void BSP_SDRAM_Initialization_Sequence(SDRAM_HandleTypeDef *hsdram, FMC_SDRAM_CommandTypeDef *Command);
@@ -175,10 +209,15 @@ static uint8_t QSPI_OutDrvStrengthCfg(QSPI_HandleTypeDef *hqspi);
 static uint8_t QSPI_WriteEnable(QSPI_HandleTypeDef *hqspi);
 static uint8_t QSPI_AutoPollingMemReady  (QSPI_HandleTypeDef *hqspi, uint32_t Timeout);
 static uint8_t BSP_QSPI_EnableMemoryMappedMode(QSPI_HandleTypeDef *hqspi);
+void WriteRegisterWithSwap(uint8_t deviceAddress, uint16_t registerAddress, uint16_t data);
+extern void AudioInit(uint32_t AudioFreq);
+extern uint8_t wm8994_Init(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+//extern void AudioInit(uint32_t AudioFreq);
+
 
 /* USER CODE END 0 */
 
@@ -195,7 +234,6 @@ int main(void)
 
   /* MPU Configuration--------------------------------------------------------*/
   MPU_Config();
-
   /* Enable the CPU Cache */
 
   /* Enable I-Cache---------------------------------------------------------*/
@@ -211,6 +249,7 @@ int main(void)
 
   /* USER CODE BEGIN Init */
 
+
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -221,28 +260,31 @@ int main(void)
 
   /* USER CODE BEGIN SysInit */
 
+
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
+
+  MX_I2C4_Init();
   MX_DSIHOST_DSI_Init();
   MX_LTDC_Init();
   MX_FMC_Init();
   MX_QUADSPI_Init();
   MX_DMA2D_Init();
-  MX_I2C4_Init();
   MX_LIBJPEG_Init();
   MX_CRC_Init();
   MX_SDMMC2_SD_Init();
   MX_FATFS_Init();
-  MX_DFSDM1_Init();
   MX_SAI1_Init();
+  MX_DFSDM1_Init();
+
   MX_TouchGFX_Init();
+
   /* Call PreOsInit function */
   MX_TouchGFX_PreOSInit();
   /* USER CODE BEGIN 2 */
-
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -254,13 +296,18 @@ int main(void)
 
   /* Create the semaphores(s) */
   /* creation of StartRecordingSemaphore */
-  StartRecordingSemaphoreHandle = osSemaphoreNew(1, 0, &StartRecordingSemaphore_attributes);
-
   /* creation of StopRecordingSemaphore */
   StopRecordingSemaphoreHandle = osSemaphoreNew(1, 0, &StopRecordingSemaphore_attributes);
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
+  //StartSavingSemaphoreHandle =  osSemaphoreNew(1, 0, &StopRecordingSemaphore_attributes);
+  Audio_SdCard_Command_t PlayCommand = CMD_START_PLAYING;
+  Audio_SdCard_Command_t RecordCommand = CMD_START_RECORDING;
+
+
+  //StartPlayingSemaphoreHandle =  osSemaphoreNew(1, 1, &StartPlayingSemaphore_attributes);
+
   /* USER CODE END RTOS_SEMAPHORES */
 
   /* USER CODE BEGIN RTOS_TIMERS */
@@ -269,7 +316,10 @@ int main(void)
 
   /* Create the queue(s) */
   /* creation of AudioQueue */
-  AudioQueueHandle = osMessageQueueNew (4, sizeof(AudioChunk_t), &AudioQueue_attributes);
+  RecordingQueueHandle = osMessageQueueNew (8, sizeof(AudioChunk_t), &RecordingQueue_attributes);
+  PlayingQueueHandle = osMessageQueueNew (8, sizeof(AudioChunk_t), &PlayingQueue_attributes);
+  CommandAudioQueueHandle = osMessageQueueNew (4, sizeof(Audio_SdCard_Command_t), &CommandAudioQueue_attributes);
+  CommandSDQueueHandle = osMessageQueueNew (4, sizeof(Audio_SdCard_Command_t), &CommandSDQueue_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -286,7 +336,12 @@ int main(void)
   videoTaskHandle = osThreadNew(videoTaskFunc, NULL, &videoTask_attributes);
 
   /* creation of Record_Task */
-  Record_TaskHandle = osThreadNew(StartRecord_Task, NULL, &Record_Task_attributes);
+  RecAndSaveTask_Handle = osThreadNew(StartRecAndSaveTask, NULL, &RecAndSaveTask_attributes);
+  PlayAndReadTaskHandle = osThreadNew(StartPlayAndReadTask, NULL, &PlayAndReadTask_attributes);
+  /* creation of SD_Task */
+	//xQueueSend(CommandSDQueueHandle, &PlayCommand, portMAX_DELAY);
+	//xQueueSend(CommandAudioQueueHandle, &PlayCommand, portMAX_DELAY);
+  //PlayAndReadTaskHandle = osThreadNew(StartPlayAndReadTask, NULL, &PlayAndReadTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -619,6 +674,7 @@ static void MX_DSIHOST_DSI_Init(void)
   /* USER CODE END DSIHOST_Init 2 */
 
 }
+
 
 /**
   * @brief I2C4 Initialization Function
@@ -1011,8 +1067,8 @@ static void MX_FMC_Init(void)
 static void MX_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
-/* USER CODE BEGIN MX_GPIO_Init_1 */
-/* USER CODE END MX_GPIO_Init_1 */
+  /* USER CODE BEGIN MX_GPIO_Init_1 */
+  /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOE_CLK_ENABLE();
@@ -1084,8 +1140,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(FRAME_RATE_GPIO_Port, &GPIO_InitStruct);
 
-/* USER CODE BEGIN MX_GPIO_Init_2 */
-/* USER CODE END MX_GPIO_Init_2 */
+  /* USER CODE BEGIN MX_GPIO_Init_2 */
+  /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
@@ -1706,6 +1762,71 @@ static uint8_t BSP_QSPI_EnableMemoryMappedMode(QSPI_HandleTypeDef *hqspi)
   return QSPI_OK;
 }
 
+
+void HAL_SAI_TxHalfCpltCallback(SAI_HandleTypeDef *hsai)
+{
+    audio_tx_buffer_state = BUFFER_OFFSET_HALF;
+	HAL_GPIO_TogglePin(LED_G_GPIO_Port, LED_G_Pin);
+
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    vTaskNotifyGiveFromISR(xPlayingTaskHandle, &xHigherPriorityTaskWoken);
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+}
+
+void HAL_SAI_TxCpltCallback(SAI_HandleTypeDef *hsai)
+{
+    audio_tx_buffer_state = BUFFER_OFFSET_FULL;
+	HAL_GPIO_TogglePin(LED_R_GPIO_Port, LED_R_Pin);
+
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    vTaskNotifyGiveFromISR(xPlayingTaskHandle, &xHigherPriorityTaskWoken);
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+}
+
+void HAL_SAI_RxCpltCallback(SAI_HandleTypeDef *hsai)
+{
+
+	BSP_AUDIO_IN_TransferComplete_CallBack();
+
+}
+
+void HAL_SAI_RxHalfCpltCallback(SAI_HandleTypeDef *hsai)
+{
+
+	BSP_AUDIO_IN_HalfTransfer_CallBack();
+
+}
+
+void BSP_AUDIO_IN_TransferComplete_CallBack(void)
+{
+    // Set the buffer state
+    audio_rec_buffer_state = BUFFER_OFFSET_FULL;
+
+    // Notify the task that the full buffer is ready
+	HAL_GPIO_TogglePin(LED_R_GPIO_Port, LED_R_Pin);
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    vTaskNotifyGiveFromISR(xRecordingTaskHandle, &xHigherPriorityTaskWoken); // Notify task
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken); // Yield to higher priority tasks
+}
+
+void BSP_AUDIO_IN_HalfTransfer_CallBack(void)
+{
+    // Set the buffer state
+    audio_rec_buffer_state = BUFFER_OFFSET_HALF;
+
+    // Notify the task that the half-buffer is ready
+	HAL_GPIO_TogglePin(LED_G_GPIO_Port, LED_G_Pin);
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    vTaskNotifyGiveFromISR(xRecordingTaskHandle, &xHigherPriorityTaskWoken); // Notify task
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken); // Yield to higher priority tasks
+}
+
+void HAL_SAI_ErrorCallback(SAI_HandleTypeDef *hsai)
+{
+    // Diagnostyka błędów, np. przez LED lub log
+    Error_Handler(); // lub coś bardziej eleganckiego
+}
+
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -1718,10 +1839,9 @@ static uint8_t BSP_QSPI_EnableMemoryMappedMode(QSPI_HandleTypeDef *hqspi)
 void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN 5 */
-  for(;;)
-  {
-    osDelay(100);
-  }
+    AudioInit(frequency);
+    wm8994_Init();
+    vTaskDelete(defaultTaskHandle);
   /* USER CODE END 5 */
 }
 
@@ -1809,7 +1929,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE BEGIN Callback 0 */
 
   /* USER CODE END Callback 0 */
-  if (htim->Instance == TIM6) {
+  if (htim->Instance == TIM6)
+  {
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
@@ -1825,6 +1946,7 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
+    HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_R_Pin, GPIO_PIN_SET);
 
   /* USER CODE END Error_Handler_Debug */
 }

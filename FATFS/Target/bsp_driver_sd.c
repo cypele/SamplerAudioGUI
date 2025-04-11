@@ -33,7 +33,6 @@
 /* USER CODE END FirstSection */
 /* Includes ------------------------------------------------------------------*/
 #include "bsp_driver_sd.h"
-
 /* Extern variables ---------------------------------------------------------*/
 
 extern SD_HandleTypeDef hsd2;
@@ -56,7 +55,7 @@ __weak uint8_t BSP_SD_Init(void)
   /* HAL SD initialization */
   sd_state = HAL_SD_Init(&hsd2);
 
-  return sd_state;
+  return sd_state; // Return the initialization status
 }
 /* USER CODE BEGIN AfterInitSection */
 /* can be used to modify previous code / undefine following code / add code */
