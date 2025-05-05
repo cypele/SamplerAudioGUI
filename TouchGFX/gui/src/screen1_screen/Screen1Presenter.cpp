@@ -22,18 +22,15 @@ void Screen1Presenter::deactivate()
 #ifdef SIMULATOR
     // Kompilacja dla symulatora – pomiń FreeRTOS
 #else
-void Screen1Presenter::swButtonRecordSemaphoreGive()
+void Screen1Presenter::swButtonRecordCommandGive()
 {
 	model->StartRecording();
 }
-
-
-void Screen1Presenter::swButtonStopSemaphoreGive()
+void Screen1Presenter::swButtonStopCommandGive()
 {
 	model->StopRecording();
 }
-
-void Screen1Presenter::swButtonPlaySemaphoreGive()
+void Screen1Presenter::swButtonPlayCommandGive()
 {
 	model->StartPlaying();
 }

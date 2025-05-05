@@ -1,5 +1,5 @@
-C:/TouchGFXProjects/SamplerAudio1/TouchGFX/gui/src/model/Model.cpp:25:8:void Model::StartRecording()	8	static
-C:/TouchGFXProjects/SamplerAudio1/TouchGFX/gui/src/model/Model.cpp:36:8:void Model::StopRecording()	8	static
-C:/TouchGFXProjects/SamplerAudio1/TouchGFX/gui/src/model/Model.cpp:45:8:void Model::StartPlaying()	8	static
-C:/TouchGFXProjects/SamplerAudio1/TouchGFX/gui/src/model/Model.cpp:58:1:Model::Model()	0	static
-C:/TouchGFXProjects/SamplerAudio1/TouchGFX/gui/src/model/Model.cpp:63:6:void Model::tick()	0	static
+C:/TouchGFXProjects/SamplerAudio1/TouchGFX/gui/src/model/Model.cpp:21:8:void Model::StartRecording()	8	static
+C:/TouchGFXProjects/SamplerAudio1/TouchGFX/gui/src/model/Model.cpp:32:8:void Model::StopRecording()	8	static
+C:/TouchGFXProjects/SamplerAudio1/TouchGFX/gui/src/model/Model.cpp:41:8:void Model::StartPlaying()	8	static
+C:/TouchGFXProjects/SamplerAudio1/TouchGFX/gui/src/model/Model.cpp:54:1:Model::Model()	0	static
+C:/TouchGFXProjects/SamplerAudio1/TouchGFX/gui/src/model/Model.cpp:59:6:void Model::tick()	0	static

@@ -1,4 +1,4 @@
-Application/User/LIBJPEG/Target/jdata_conf.o: \
+Application/User/LIBJPEG/target/jdata_conf.o: \
  C:/TouchGFXProjects/SamplerAudio1/LIBJPEG/Target/jdata_conf.c \
  C:/TouchGFXProjects/SamplerAudio1/LIBJPEG/Target/jdata_conf.h \
  ../../Middlewares/Third_Party/FatFs/src/ff.h \
@@ -47,8 +47,7 @@ Application/User/LIBJPEG/Target/jdata_conf.o: \
  ../../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_dfsdm.h \
  ../../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_dsi.h \
  ../../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os.h \
- ../../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h \
- ../../Core/Inc/FreeRTOSConfig.h \
+ ../../Core/Inc/FreeRTOS.h ../../Core/Inc/FreeRTOSConfig.h \
  ../../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h \
  ../../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h \
  ../../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h \
@@ -109,7 +108,7 @@ C:/TouchGFXProjects/SamplerAudio1/LIBJPEG/Target/jdata_conf.h:
 ../../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_dfsdm.h:
 ../../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal_dsi.h:
 ../../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os.h:
-../../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h:
+../../Core/Inc/FreeRTOS.h:
 ../../Core/Inc/FreeRTOSConfig.h:
 ../../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h:
 ../../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h:

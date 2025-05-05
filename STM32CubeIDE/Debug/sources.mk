@@ -39,19 +39,18 @@ CPP_DEPS :=
 
 # Every subdirectory with source files must be described here
 SUBDIRS := \
-Application/Startup \
-Application/User/FATFS/App \
-Application/User/FATFS/Target \
 Application/User/LIBJPEG/App \
-Application/User/LIBJPEG/Target \
-Application/User \
+Application/User/LIBJPEG/target \
 Application/User/TouchGFX/App \
 Application/User/TouchGFX/target \
 Application/User/TouchGFX/target/generated \
 Application/User/generated \
 Application/User/gui \
+Core/Src \
+Core/Src/FATFS/App \
+Core/Src/FATFS/Target \
+Core/Src/Startup \
 Drivers/BSP/Components \
-Drivers/CMSIS \
 Drivers/STM32F7xx_HAL_Driver \
 Middlewares/FatFs \
 Middlewares/FreeRTOS \

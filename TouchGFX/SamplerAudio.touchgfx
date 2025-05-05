@@ -1,0 +1,164 @@
+{
+  "Application": {
+    "Screens": [
+      {
+        "Name": "Screen1",
+        "Components": [
+          {
+            "Type": "ScalableImage",
+            "Name": "background",
+            "Width": 800,
+            "Height": 480,
+            "Filename": "__generated\\alternate_theme_images_backgrounds_800x480_gradient_dark.png",
+            "ScalingAlgorithm": "Nearest-neighbor"
+          },
+          {
+            "Type": "ButtonWithIcon",
+            "Name": "PlayButton",
+            "X": 111,
+            "Y": 196,
+            "Width": 110,
+            "Height": 50,
+            "Pressed": "__generated\\alternate_theme_images_widgets_button_regular_height_50_tiny_round_disabled.png",
+            "Released": "__generated\\alternate_theme_images_widgets_button_regular_height_50_tiny_round_disabled.png",
+            "IconPressed": "__generated\\icon_theme_images_av_play_circle_filled_50_50_ED0202.svg.png",
+            "IconReleased": "__generated\\icon_theme_images_av_play_circle_filled_50_50_1B8207.svg.png",
+            "IconX": 30,
+            "IconHeight": 50,
+            "IconWidth": 50,
+            "Preset": "alternate_theme\\presets\\button\\regular\\height_50\\tiny_round_disabled.json"
+          },
+          {
+            "Type": "ButtonWithIcon",
+            "Name": "RecordButton",
+            "X": 330,
+            "Y": 196,
+            "Width": 110,
+            "Height": 50,
+            "Pressed": "__generated\\alternate_theme_images_widgets_button_regular_height_50_tiny_round_disabled.png",
+            "Released": "__generated\\alternate_theme_images_widgets_button_regular_height_50_tiny_round_disabled.png",
+            "IconPressed": "__generated\\icon_theme_images_image_circle_50_50_FF082D.svg.png",
+            "IconReleased": "__generated\\icon_theme_images_image_circle_50_50_E8F6FB.svg.png",
+            "IconX": 30,
+            "IconHeight": 50,
+            "IconWidth": 50,
+            "Preset": "alternate_theme\\presets\\button\\regular\\height_50\\tiny_round_disabled.json"
+          },
+          {
+            "Type": "ButtonWithIcon",
+            "Name": "StopButton",
+            "X": 551,
+            "Y": 196,
+            "Width": 110,
+            "Height": 50,
+            "Pressed": "__generated\\alternate_theme_images_widgets_button_regular_height_50_tiny_round_disabled.png",
+            "Released": "__generated\\alternate_theme_images_widgets_button_regular_height_50_tiny_round_disabled.png",
+            "IconPressed": "__generated\\icon_theme_images_av_stop_circle_50_50_ED0202.svg.png",
+            "IconReleased": "__generated\\icon_theme_images_av_stop_circle_50_50_E8F6FB.svg.png",
+            "IconX": 30,
+            "IconHeight": 50,
+            "IconWidth": 50,
+            "Preset": "alternate_theme\\presets\\button\\regular\\height_50\\tiny_round_disabled.json"
+          }
+        ],
+        "Interactions": [
+          {
+            "InteractionName": "StopRecordingInteraction",
+            "Trigger": {
+              "Type": "TriggerClicked",
+              "TriggerComponent": "StopButton"
+            },
+            "Action": {
+              "Type": "ActionExecuteCode",
+              "Code": "presenter->swButtonStopCommandGive();"
+            }
+          },
+          {
+            "InteractionName": "StartRecordingInteraction",
+            "Trigger": {
+              "Type": "TriggerClicked",
+              "TriggerComponent": "RecordButton"
+            },
+            "Action": {
+              "Type": "ActionExecuteCode",
+              "Code": "presenter->swButtonRecordCommandGive();"
+            }
+          },
+          {
+            "InteractionName": "StartPlayingInteraction",
+            "Trigger": {
+              "Type": "TriggerClicked",
+              "TriggerComponent": "PlayButton"
+            },
+            "Action": {
+              "Type": "ActionExecuteCode",
+              "Code": "presenter->swButtonPlayCommandGive();"
+            }
+          }
+        ]
+      }
+    ],
+    "CustomContainerDefinitions": [],
+    "Name": "SamplerAudio1",
+    "Resolution": {
+      "Width": 800,
+      "Height": 480
+    },
+    "SelectedColorDepth": 16,
+    "StartupScreenName": "Screen1",
+    "SelectedStartupLanguage": "GB",
+    "TouchGfxPath": "../Middlewares/ST/touchgfx",
+    "UIPath": ".",
+    "AvailableColorDepths": [
+      16
+    ],
+    "AvailableLCDs": {
+      "24": "LCD24bpp",
+      "16": "LCD16bpp"
+    },
+    "AvailableSections": [
+      "ExtFlashSection",
+      "IntFlashSection"
+    ],
+    "AvailableResolutions": [
+      {
+        "Width": 800,
+        "Height": 480
+      }
+    ],
+    "PhysicalButtons": [],
+    "FrameworkFeatures": {
+      "LCD16bpp": {
+        "Id": "LCD16bpp",
+        "IsEnabled": true
+      }
+    },
+    "GenerateAssetsCommand": "make -f simulator/gcc/Makefile assets -j8",
+    "PostGenerateCommand": "touchgfx update_project --project-file=simulator/msvs/Application.vcxproj",
+    "PostGenerateTargetCommand": "touchgfx update_project",
+    "CompileSimulatorCommand": "make -f simulator/gcc/Makefile -j8",
+    "RunSimulatorCommand": "build\\bin\\simulator.exe",
+    "CompileTargetCommandOverride": "make -f ../gcc/Makefile -j8",
+    "FlashTargetCommandOverride": "make -f ../gcc/Makefile flash",
+    "FlashTargetIntCommandOverride": "make -f ../gcc/Makefile intflash",
+    "LandscapeSkinX": 0,
+    "LandscapeSkinY": 0,
+    "PortraitSkinX": 0,
+    "PortraitSkinY": 0,
+    "DisplayOrientation": "Landscape",
+    "Family": "STM32F7",
+    "SubFamily": "STM32F7x9",
+    "Toolchain": "STM32CubeIDE",
+    "Platform": "m7",
+    "ProjectFile": "../STM32F769I_DISCO.ioc",
+    "OptionalComponentsRoot": "../Middlewares/ST/touchgfx_components",
+    "OptionalComponents": [],
+    "AdditionalFeatures": [
+      "CWRVector",
+      "VectorFonts",
+      "Video"
+    ]
+  },
+  "Version": "4.24.1",
+  "CreatedBy": "4.24.1"
+}

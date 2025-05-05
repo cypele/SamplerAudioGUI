@@ -8,10 +8,6 @@
 	#include "semphr.h"
 	#include "queue.h"
     #include "main.h"
-	extern SemaphoreHandle_t StartRecordingSemaphoreHandle;
-	extern SemaphoreHandle_t StopRecordingSemaphoreHandle;
-	extern SemaphoreHandle_t StartSavingSemaphoreHandle;
-	extern SemaphoreHandle_t StartPlayingSemaphoreHandle;
 	extern QueueHandle_t CommandSDQueueHandle;
 	extern QueueHandle_t CommandAudioQueueHandle;
 

@@ -28,8 +28,7 @@
 /* USER CODE BEGIN Includes */
 #include "../mx25l512/mx25l512.h"
 #include "../otm8009a/otm8009a.h"
-#include "My_Audio.h"
-#include "audio.h"
+#include "Audio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -71,8 +70,7 @@ volatile uint32_t i2c_error_counter = 0;
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-extern uint32_t frequency;
-
+uint32_t frequency;
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -104,9 +102,9 @@ DMA_HandleTypeDef hdma_sdmmc2_tx;
 SDRAM_HandleTypeDef hsdram1;
 
 /* Definitions for defaultTask */
-osThreadId_t defaultTaskHandle;
-const osThreadAttr_t defaultTask_attributes = {
-  .name = "defaultTask",
+osThreadId_t AudioInitTaskHandle;
+const osThreadAttr_t AudioInitTask_attributes = {
+  .name = "AudioInitTask",
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityRealtime6,
 };
@@ -125,16 +123,16 @@ const osThreadAttr_t videoTask_attributes = {
   .priority = (osPriority_t) osPriorityHigh,
 };
 /* Definitions for Record_Task */
-osThreadId_t RecAndSaveTask_Handle;
-const osThreadAttr_t RecAndSaveTask_attributes = {
-  .name = "RecAndSaveTask",
+osThreadId_t RecAndPlayTask_Handle;
+const osThreadAttr_t RecAndPlayTask_attributes = {
+  .name = "RecAndPlayTask",
   .stack_size = 2048 * 4,
   .priority = (osPriority_t) osPriorityRealtime1,
 };
 /* Definitions for SD_Task */
-osThreadId_t PlayAndReadTaskHandle;
-const osThreadAttr_t PlayAndReadTask_attributes = {
-  .name = "PlayAndReadTask",
+osThreadId_t SaveAndReadTaskHandle;
+const osThreadAttr_t SaveAndReadTask_attributes = {
+  .name = "SaveAndReadTask",
   .stack_size = 1024 * 4,
   .priority = (osPriority_t) osPriorityHigh,
 };
@@ -161,12 +159,6 @@ const osMessageQueueAttr_t CommandAudioQueue_attributes = {
 };
 
 
-/* Definitions for StopRecordingSemaphore */
-osSemaphoreId_t StopRecordingSemaphoreHandle;
-const osSemaphoreAttr_t StopRecordingSemaphore_attributes = {
-  .name = "StopRecordingSemaphore"
-};
-
 /* USER CODE BEGIN PV */
 /* Definitions for StopRecordingSemaphore */
 
@@ -190,13 +182,12 @@ static void MX_QUADSPI_Init(void);
 static void MX_DMA2D_Init(void);
 static void MX_CRC_Init(void);
 static void MX_SDMMC2_SD_Init(void);
-static void MX_DFSDM1_Init(void);
 static void MX_SAI1_Init(void);
-void StartDefaultTask(void *argument);
+void StartAudioInitTask(void *argument);
 extern void TouchGFX_Task(void *argument);
 extern void videoTaskFunc(void *argument);
-extern void StartRecAndSaveTask(void *argument);
-extern void StartPlayAndReadTask(void *argument);
+extern void StartRecAndPlayTask(void *argument);
+extern void StartSaveAndReadTask(void *argument);
 
 /* USER CODE BEGIN PFP */
 static void BSP_SDRAM_Initialization_Sequence(SDRAM_HandleTypeDef *hsdram, FMC_SDRAM_CommandTypeDef *Command);
@@ -211,7 +202,7 @@ static uint8_t QSPI_AutoPollingMemReady  (QSPI_HandleTypeDef *hqspi, uint32_t Ti
 static uint8_t BSP_QSPI_EnableMemoryMappedMode(QSPI_HandleTypeDef *hqspi);
 void WriteRegisterWithSwap(uint8_t deviceAddress, uint16_t registerAddress, uint16_t data);
 extern void AudioInit(uint32_t AudioFreq);
-extern uint8_t wm8994_Init(void);
+extern uint8_t wm8994_Init(uint8_t volume, uint32_t AudioFreq);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -278,7 +269,6 @@ int main(void)
   MX_SDMMC2_SD_Init();
   MX_FATFS_Init();
   MX_SAI1_Init();
-  MX_DFSDM1_Init();
 
   MX_TouchGFX_Init();
 
@@ -297,16 +287,9 @@ int main(void)
   /* Create the semaphores(s) */
   /* creation of StartRecordingSemaphore */
   /* creation of StopRecordingSemaphore */
-  StopRecordingSemaphoreHandle = osSemaphoreNew(1, 0, &StopRecordingSemaphore_attributes);
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
-  //StartSavingSemaphoreHandle =  osSemaphoreNew(1, 0, &StopRecordingSemaphore_attributes);
-  Audio_SdCard_Command_t PlayCommand = CMD_START_PLAYING;
-  Audio_SdCard_Command_t RecordCommand = CMD_START_RECORDING;
-
-
-  //StartPlayingSemaphoreHandle =  osSemaphoreNew(1, 1, &StartPlayingSemaphore_attributes);
 
   /* USER CODE END RTOS_SEMAPHORES */
 
@@ -327,7 +310,7 @@ int main(void)
 
   /* Create the thread(s) */
   /* creation of defaultTask */
-  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+  AudioInitTaskHandle = osThreadNew(StartAudioInitTask, NULL, &AudioInitTask_attributes);
 
   /* creation of TouchGFXTask */
   TouchGFXTaskHandle = osThreadNew(TouchGFX_Task, NULL, &TouchGFXTask_attributes);
@@ -336,12 +319,9 @@ int main(void)
   videoTaskHandle = osThreadNew(videoTaskFunc, NULL, &videoTask_attributes);
 
   /* creation of Record_Task */
-  RecAndSaveTask_Handle = osThreadNew(StartRecAndSaveTask, NULL, &RecAndSaveTask_attributes);
-  PlayAndReadTaskHandle = osThreadNew(StartPlayAndReadTask, NULL, &PlayAndReadTask_attributes);
+  RecAndPlayTask_Handle = osThreadNew(StartRecAndPlayTask, NULL, &RecAndPlayTask_attributes);
+  SaveAndReadTaskHandle = osThreadNew(StartSaveAndReadTask, NULL, &SaveAndReadTask_attributes);
   /* creation of SD_Task */
-	//xQueueSend(CommandSDQueueHandle, &PlayCommand, portMAX_DELAY);
-	//xQueueSend(CommandAudioQueueHandle, &PlayCommand, portMAX_DELAY);
-  //PlayAndReadTaskHandle = osThreadNew(StartPlayAndReadTask, NULL, &PlayAndReadTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -471,53 +451,6 @@ static void MX_CRC_Init(void)
   /* USER CODE BEGIN CRC_Init 2 */
 
   /* USER CODE END CRC_Init 2 */
-
-}
-
-/**
-  * @brief DFSDM1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_DFSDM1_Init(void)
-{
-
-  /* USER CODE BEGIN DFSDM1_Init 0 */
-
-  /* USER CODE END DFSDM1_Init 0 */
-
-  /* USER CODE BEGIN DFSDM1_Init 1 */
-
-  /* USER CODE END DFSDM1_Init 1 */
-  hdfsdm1_filter0.Instance = DFSDM1_Filter0;
-  hdfsdm1_filter0.Init.RegularParam.Trigger = DFSDM_FILTER_SW_TRIGGER;
-  hdfsdm1_filter0.Init.RegularParam.FastMode = ENABLE;
-  hdfsdm1_filter0.Init.RegularParam.DmaMode = DISABLE;
-  hdfsdm1_filter0.Init.FilterParam.SincOrder = DFSDM_FILTER_FASTSINC_ORDER;
-  hdfsdm1_filter0.Init.FilterParam.Oversampling = 64;
-  hdfsdm1_filter0.Init.FilterParam.IntOversampling = 1;
-  HAL_DFSDM_FilterInit(&hdfsdm1_filter0);
-  hdfsdm1_channel0.Instance = DFSDM1_Channel0;
-  hdfsdm1_channel0.Init.OutputClock.Activation = DISABLE;
-  hdfsdm1_channel0.Init.OutputClock.Selection = DFSDM_CHANNEL_OUTPUT_CLOCK_SYSTEM;
-  hdfsdm1_channel0.Init.OutputClock.Divider = 2;
-  hdfsdm1_channel0.Init.Input.Multiplexer = DFSDM_CHANNEL_EXTERNAL_INPUTS;
-  hdfsdm1_channel0.Init.Input.DataPacking = DFSDM_CHANNEL_STANDARD_MODE;
-  hdfsdm1_channel0.Init.Input.Pins = DFSDM_CHANNEL_SAME_CHANNEL_PINS;
-  hdfsdm1_channel0.Init.SerialInterface.Type = DFSDM_CHANNEL_SPI_RISING;
-  hdfsdm1_channel0.Init.SerialInterface.SpiClock = DFSDM_CHANNEL_SPI_CLOCK_EXTERNAL;
-  hdfsdm1_channel0.Init.Awd.FilterOrder = DFSDM_CHANNEL_FASTSINC_ORDER;
-  hdfsdm1_channel0.Init.Awd.Oversampling = 1;
-  hdfsdm1_channel0.Init.Offset = 0;
-  hdfsdm1_channel0.Init.RightBitShift = 0x00;
-  if (HAL_DFSDM_ChannelInit(&hdfsdm1_channel0) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  HAL_DFSDM_FilterConfigRegChannel(&hdfsdm1_filter0, DFSDM_CHANNEL_0, DFSDM_CONTINUOUS_CONV_ON);
-  /* USER CODE BEGIN DFSDM1_Init 2 */
-
-  /* USER CODE END DFSDM1_Init 2 */
 
 }
 
@@ -1766,8 +1699,6 @@ static uint8_t BSP_QSPI_EnableMemoryMappedMode(QSPI_HandleTypeDef *hqspi)
 void HAL_SAI_TxHalfCpltCallback(SAI_HandleTypeDef *hsai)
 {
     audio_tx_buffer_state = BUFFER_OFFSET_HALF;
-	HAL_GPIO_TogglePin(LED_G_GPIO_Port, LED_G_Pin);
-
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     vTaskNotifyGiveFromISR(xPlayingTaskHandle, &xHigherPriorityTaskWoken);
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
@@ -1776,8 +1707,6 @@ void HAL_SAI_TxHalfCpltCallback(SAI_HandleTypeDef *hsai)
 void HAL_SAI_TxCpltCallback(SAI_HandleTypeDef *hsai)
 {
     audio_tx_buffer_state = BUFFER_OFFSET_FULL;
-	HAL_GPIO_TogglePin(LED_R_GPIO_Port, LED_R_Pin);
-
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     vTaskNotifyGiveFromISR(xPlayingTaskHandle, &xHigherPriorityTaskWoken);
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
@@ -1785,31 +1714,17 @@ void HAL_SAI_TxCpltCallback(SAI_HandleTypeDef *hsai)
 
 void HAL_SAI_RxCpltCallback(SAI_HandleTypeDef *hsai)
 {
-
-	BSP_AUDIO_IN_TransferComplete_CallBack();
-
-}
-
-void HAL_SAI_RxHalfCpltCallback(SAI_HandleTypeDef *hsai)
-{
-
-	BSP_AUDIO_IN_HalfTransfer_CallBack();
-
-}
-
-void BSP_AUDIO_IN_TransferComplete_CallBack(void)
-{
     // Set the buffer state
     audio_rec_buffer_state = BUFFER_OFFSET_FULL;
-
     // Notify the task that the full buffer is ready
 	HAL_GPIO_TogglePin(LED_R_GPIO_Port, LED_R_Pin);
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     vTaskNotifyGiveFromISR(xRecordingTaskHandle, &xHigherPriorityTaskWoken); // Notify task
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken); // Yield to higher priority tasks
+
 }
 
-void BSP_AUDIO_IN_HalfTransfer_CallBack(void)
+void HAL_SAI_RxHalfCpltCallback(SAI_HandleTypeDef *hsai)
 {
     // Set the buffer state
     audio_rec_buffer_state = BUFFER_OFFSET_HALF;
@@ -1819,7 +1734,9 @@ void BSP_AUDIO_IN_HalfTransfer_CallBack(void)
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     vTaskNotifyGiveFromISR(xRecordingTaskHandle, &xHigherPriorityTaskWoken); // Notify task
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken); // Yield to higher priority tasks
+
 }
+
 
 void HAL_SAI_ErrorCallback(SAI_HandleTypeDef *hsai)
 {
@@ -1829,19 +1746,21 @@ void HAL_SAI_ErrorCallback(SAI_HandleTypeDef *hsai)
 
 /* USER CODE END 4 */
 
-/* USER CODE BEGIN Header_StartDefaultTask */
+/* USER CODE BEGIN Header_StartAudioInitTask */
 /**
   * @brief  Function implementing the defaultTask thread.
   * @param  argument: Not used
   * @retval None
   */
-/* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument)
+/* USER CODE END Header_StartAudioInitTask */
+void StartAudioInitTask(void *argument)
 {
   /* USER CODE BEGIN 5 */
+	frequency = AUDIO_FREQUENCY_48K;
+	uint8_t volume = 100;
     AudioInit(frequency);
-    wm8994_Init();
-    vTaskDelete(defaultTaskHandle);
+    wm8994_Init(volume, frequency);
+    vTaskDelete(AudioInitTaskHandle);
   /* USER CODE END 5 */
 }
 

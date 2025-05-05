@@ -23,7 +23,7 @@ Screen1ViewBase::Screen1ViewBase() :
     PlayButton.setAction(buttonCallback);
     add(PlayButton);
 
-    RecordButton.setXY(375, 196);
+    RecordButton.setXY(330, 196);
     RecordButton.setBitmaps(touchgfx::Bitmap(BITMAP_ALTERNATE_THEME_IMAGES_WIDGETS_BUTTON_REGULAR_HEIGHT_50_TINY_ROUND_DISABLED_ID), touchgfx::Bitmap(BITMAP_ALTERNATE_THEME_IMAGES_WIDGETS_BUTTON_REGULAR_HEIGHT_50_TINY_ROUND_DISABLED_ID), touchgfx::Bitmap(BITMAP_ICON_THEME_IMAGES_IMAGE_CIRCLE_50_50_E8F6FB_SVG_ID), touchgfx::Bitmap(BITMAP_ICON_THEME_IMAGES_IMAGE_CIRCLE_50_50_FF082D_SVG_ID));
     RecordButton.setIconXY(30, 0);
     RecordButton.setAction(buttonCallback);
@@ -50,23 +50,23 @@ void Screen1ViewBase::buttonCallbackHandler(const touchgfx::AbstractButton& src)
 {
     if (&src == &StopButton)
     {
-        //Interaction1
+        //StopRecordingInteraction
         //When StopButton clicked execute C++ code
         //Execute C++ code
-        presenter->swButtonStopSemaphoreGive();
+        presenter->swButtonStopCommandGive();
     }
     if (&src == &RecordButton)
     {
-        //Interaction2
+        //StartRecordingInteraction
         //When RecordButton clicked execute C++ code
         //Execute C++ code
-        presenter->swButtonRecordSemaphoreGive();
+        presenter->swButtonRecordCommandGive();
     }
     if (&src == &PlayButton)
     {
-        //Interaction3
+        //StartPlayingInteraction
         //When PlayButton clicked execute C++ code
         //Execute C++ code
-        presenter->swButtonPlaySemaphoreGive();
+        presenter->swButtonPlayCommandGive();
     }
 }

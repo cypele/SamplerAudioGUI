@@ -1,0 +1,5 @@
+C:/TouchGFXProjects/SamplerAudio1/Core/Src/SdCard.c:155:6:GenerateNextFilename	3
+C:/TouchGFXProjects/SamplerAudio1/Core/Src/SdCard.c:167:6:GetLatestFilename	4
+C:/TouchGFXProjects/SamplerAudio1/Core/Src/SdCard.c:205:6:FillWavHeader	1
+C:/TouchGFXProjects/SamplerAudio1/Core/Src/SdCard.c:225:6:UpdateWavHeader	7
+C:/TouchGFXProjects/SamplerAudio1/Core/Src/SdCard.c:39:6:StartSaveAndReadTask	16

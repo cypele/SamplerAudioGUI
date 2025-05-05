@@ -1,0 +1,6 @@
+C:/TouchGFXProjects/SamplerAudio1/Core/Src/wm8994_initialization.c:361:6:I2C4_AudioInit	48	static
+C:/TouchGFXProjects/SamplerAudio1/Core/Src/wm8994_initialization.c:177:9:WriteCodecRegister_WithVeriy	32	static
+C:/TouchGFXProjects/SamplerAudio1/Core/Src/wm8994_initialization.c:220:19:WM8994_WriteRegister	32	static
+C:/TouchGFXProjects/SamplerAudio1/Core/Src/wm8994_initialization.c:245:10:wm8994_SetMute	16	static
+C:/TouchGFXProjects/SamplerAudio1/Core/Src/wm8994_initialization.c:276:10:wm8994_SetVolume	24	static
+C:/TouchGFXProjects/SamplerAudio1/Core/Src/wm8994_initialization.c:29:9:wm8994_Init	24	static

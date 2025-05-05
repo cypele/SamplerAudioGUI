@@ -77,8 +77,7 @@ Application/User/TouchGFX/target/TouchGFXHAL.o: \
  ../../Middlewares/ST/touchgfx/framework/include/touchgfx/hal/GPIO.hpp \
  ../../Drivers/BSP/Components/Common/../otm8009a/otm8009a.h \
  ../../TouchGFX/target/CortexMMCUInstrumentation.hpp \
- ../../TouchGFX/target/KeySampler.hpp \
- ../../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h \
+ ../../TouchGFX/target/KeySampler.hpp ../../Core/Inc/FreeRTOS.h \
  ../../Core/Inc/FreeRTOSConfig.h \
  ../../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h \
  ../../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h \
@@ -165,7 +164,7 @@ Application/User/TouchGFX/target/TouchGFXHAL.o: \
 ../../Drivers/BSP/Components/Common/../otm8009a/otm8009a.h:
 ../../TouchGFX/target/CortexMMCUInstrumentation.hpp:
 ../../TouchGFX/target/KeySampler.hpp:
-../../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h:
+../../Core/Inc/FreeRTOS.h:
 ../../Core/Inc/FreeRTOSConfig.h:
 ../../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h:
 ../../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h:

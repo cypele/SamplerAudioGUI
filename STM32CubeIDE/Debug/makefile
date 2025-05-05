@@ -13,19 +13,18 @@ RM := rm -rf
 -include Middlewares/FreeRTOS/subdir.mk
 -include Middlewares/FatFs/subdir.mk
 -include Drivers/STM32F7xx_HAL_Driver/subdir.mk
--include Drivers/CMSIS/subdir.mk
 -include Drivers/BSP/Components/subdir.mk
+-include Core/Src/Startup/subdir.mk
+-include Core/Src/FATFS/Target/subdir.mk
+-include Core/Src/FATFS/App/subdir.mk
+-include Core/Src/subdir.mk
 -include Application/User/gui/subdir.mk
 -include Application/User/generated/subdir.mk
 -include Application/User/TouchGFX/target/generated/subdir.mk
 -include Application/User/TouchGFX/target/subdir.mk
 -include Application/User/TouchGFX/App/subdir.mk
--include Application/User/LIBJPEG/Target/subdir.mk
+-include Application/User/LIBJPEG/target/subdir.mk
 -include Application/User/LIBJPEG/App/subdir.mk
--include Application/User/FATFS/Target/subdir.mk
--include Application/User/FATFS/App/subdir.mk
--include Application/User/subdir.mk
--include Application/Startup/subdir.mk
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)
