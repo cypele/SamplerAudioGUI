@@ -17,7 +17,7 @@ SamplerAudioGUI lets you trigger, record, save, and play back audio samples in r
 9. [Configuration](#configuration)
 10. [Troubleshooting](#troubleshooting)
 11. [Future Improvements](#future-improvements)
-12. [Demo Video] (#demo-video)
+12. [Demo Video](#demo-video)
 13. [License](#license)
 
 ---
@@ -180,7 +180,7 @@ This project runs under FreeRTOS with these primary tasks:
 ## Demo Video
 
 Watch SamplerAudioGUI in use:
-[![Watch the demo on YouTube](https://img.youtube.com/vi/TWÓJ_ID/0.jpg)](https://youtube.com/shorts/SqMQi4vOvKg)
+[![Watch the demo on YouTube](https://img.youtube.com/vi/SqMQi4vOvKg/0.jpg)](https://youtube.com/shorts/SqMQi4vOvKg)
 
 ---
 ## License
