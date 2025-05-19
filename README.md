@@ -1,7 +1,7 @@
 ## SamplerAudioGUI
 *Graphical, touch‑driven audio sampler for the STM32F769I‑DISCO*
 
-SamplerAudioGUI lets you trigger, record, save, and play back audio samples in real time via the onboard touchscreen. Built on STM32CubeIDE + STM32 HAL + TouchGFX + FreeRTOS, it supports loading WAV files from internal QuadSPI flash or an SD card, and leverages SDRAM for video buffers to provide a clean, button‑grid interface on the 7‑inch display.
+SamplerAudioGUI lets you trigger, record, save, and play back audio samples in real time via the onboard touchscreen. Built on STM32CubeIDE + STM32 HAL + TouchGFX + FreeRTOS, it supports loading WAV files from an SD card, and leverages SDRAM for video buffers to provide a clean, button‑grid interface on the 7‑inch display.
 
 ---
 
@@ -27,7 +27,7 @@ SamplerAudioGUI lets you trigger, record, save, and play back audio samples in r
 - **Recording & Playback**  
   Record audio in real time and immediately replay.
 - **Flexible Storage**  
-  Store samples in QuadSPI flash or on SD card (FATFS).
+  Store samples in SD card (FATFS).
 - **High‑Quality Audio**  
   Uses SAI/I²S peripheral with CODEC for stereo PCM playback (44.1 kHz & 48 kHz).
 - **FreeRTOS‑powered**  
@@ -38,8 +38,9 @@ SamplerAudioGUI lets you trigger, record, save, and play back audio samples in r
 ## Hardware Requirements
 - STM32F769I‑DISCO development board
 - Micro‑USB cable (for ST‑Link debugging & power)
-- (Optional) MicroSD card & adapter for external samples
-- Powered speakers or headphones connected to on‑board audio jack
+- MicroSD card
+- Headphones connected to on‑board audio jack
+- Microphine connected to on‑board audio jack
 
 ---
 
@@ -49,6 +50,7 @@ SamplerAudioGUI lets you trigger, record, save, and play back audio samples in r
 - ST‑Link/V2 driver (for flashing & debugging)
 - TouchGFX Designer v4.x (GUI project files included)
 - FreeRTOS (included via STM32CubeMX Middleware)
+- FATFS (included via STM32CubeMX Middleware)
 
 ---
 
@@ -93,18 +95,18 @@ This project runs under FreeRTOS with these primary tasks:
 
 ### Sample Storage
 
-1. **QuadSPI Flash**: Store critical or last-recorded samples.
-2. **SD Card**: Store bulk samples on FAT32-formatted SD cards.
+**SD Card**: Store bulk samples on FAT32-formatted SD cards.
 
 ### GUI & Input
 
-* TouchGFX draws buttons and handles touch events.
-* Button presses send messages to FreeRTOS tasks.
+* TouchGFX draws buttons and handles touch events via command queues.
+* Button presses send messages to FreeRTOS queues.
+* Tasks listen to commands.
 
 ### Audio Playback & Recording
 
-* **Recording**: Data acquired via codec to buffer, DMA transfers.
-* **Playback**: WAV data streamed via DMA to SAI/I²S.
+* **Recording**: Audio sampled by the codec into a DMA buffer, then enqueued via FreeRTOS queues to the SaveAndReadTask for persistence.
+* **Playback**: WAV data dequeued from the SaveAndReadTask into a playback buffer, then streamed via DMA to the SAI/I²S peripheral for output.
 
 ---
 
@@ -135,20 +137,17 @@ This project runs under FreeRTOS with these primary tasks:
 
 ## Usage
 
-* **Record**: Press the record button; touch interface indicates status.
-* **Playback**: Tap the sample slot to play.
-* **Sample management**: Browse banks via swipe or controls.
-
+* **Record**: Press the record button; Led toggles to indicate that DMA is working; Press Stop recording button
+* **Playback**: Press Play button
+* **Sample management**: Need improvmed by now only last sample is played
 ---
 
 ## Configuration
 
-| Parameter      | Default        | Notes                              |
-| -------------- | -------------- | ---------------------------------- |
-| Audio format   | WAV PCM 16‑bit | Mono or stereo supported           |
-| Sampling rate  | 44.1 kHz       | Change via `AUDIO_SAMPLER_RATE_HZ` |
-| SD mount point | `/sdcard/`     | Configurable in `ffconf.h`         |
-| Frame buffers  | SDRAM          | Allocated for TouchGFX video       |
+| Parameter      | Default        | Notes                                    |
+| -------------- | -------------- | ---------------------------------------- |
+| Audio format   | WAV PCM 16‑bit | Mono or stereo supported                 |
+| Sampling rate  | 44.1 kHz       | Change via `frequency` in AudioInit Task |
 
 ---
 
@@ -173,6 +172,7 @@ This project runs under FreeRTOS with these primary tasks:
 * Folder browsing and multi‑bank UI.
 * On‑device real‑time sample processing (pitch shift, tempo).
 * USB-MIDI host support.
+* Improve sample management.
 
 ---
 
