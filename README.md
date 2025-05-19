@@ -1,7 +1,7 @@
 ## SamplerAudioGUI
 *Graphical, touch‑driven audio sampler for the STM32F769I‑DISCO*
 
-SamplerAudioGUI lets you trigger and play back preloaded audio samples in real time via the onboard touchscreen. Built on STM32CubeIDE + STM32 HAL + TouchGFX, it supports loading WAV files from internal flash or an SD card, and provides a clean, button‑grid interface on the 7‑inch display.
+SamplerAudioGUI lets you trigger and play back last recorded audio sample in real time via the onboard touchscreen. Built on STM32CubeIDE + STM32 HAL + TouchGFX, it supports loading WAV files from internal flash or an SD card, and provides a clean, button‑grid interface on the 7‑inch display.
 
 ---
 
