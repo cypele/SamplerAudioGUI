@@ -103,6 +103,9 @@ This project runs under FreeRTOS with these primary tasks:
 * TouchGFX draws buttons and handles touch events via command queues.
 * Button presses send messages to FreeRTOS queues.
 * Tasks listen to commands.
+* GUI:
+  ![image](https://github.com/user-attachments/assets/45833154-0ab6-4d60-b523-9304d141f1dc)
+
 
 ### Audio Playback & Recording
 
@@ -180,6 +183,7 @@ This project runs under FreeRTOS with these primary tasks:
 ## Demo Video
 
 Watch SamplerAudioGUI in use:
+
 [![Watch the demo on YouTube](https://img.youtube.com/vi/SqMQi4vOvKg/0.jpg)](https://youtube.com/shorts/SqMQi4vOvKg)
 
 ---
