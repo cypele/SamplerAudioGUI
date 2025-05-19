@@ -104,7 +104,8 @@ This project runs under FreeRTOS with these primary tasks:
 * Button presses send messages to FreeRTOS queues.
 * Tasks listen to commands.
 * GUI:
-  ![image](https://github.com/user-attachments/assets/45833154-0ab6-4d60-b523-9304d141f1dc)
+
+![image](https://github.com/user-attachments/assets/6bfb3e0c-f98a-4f57-a66b-c6a995ba4be5)
 
 
 ### Audio Playback & Recording
