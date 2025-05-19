@@ -1,7 +1,8 @@
+````markdown
 ## SamplerAudioGUI
 *Graphical, touch‑driven audio sampler for the STM32F769I‑DISCO*
 
-SamplerAudioGUI lets you trigger and play back last recorded audio sample in real time via the onboard touchscreen. Built on STM32CubeIDE + STM32 HAL + TouchGFX, it supports loading WAV files from internal flash or an SD card, and provides a clean, button‑grid interface on the 7‑inch display.
+SamplerAudioGUI lets you trigger, record, save, and play back audio samples in real time via the onboard touchscreen. Built on STM32CubeIDE + STM32 HAL + TouchGFX + FreeRTOS, it supports loading WAV files from internal QuadSPI flash or an SD card, and leverages SDRAM for video buffers to provide a clean, button‑grid interface on the 7‑inch display.
 
 ---
 
@@ -10,27 +11,28 @@ SamplerAudioGUI lets you trigger and play back last recorded audio sample in rea
 2. [Hardware Requirements](#hardware-requirements)
 3. [Software Requirements](#software-requirements)
 4. [Directory Structure](#directory-structure)
-5. [How It Works](#how-it-works)
-6. [Setup & Build](#setup--build)
-7. [Usage](#usage)
-8. [Configuration](#configuration)
-9. [Troubleshooting](#troubleshooting)
-10. [Future Improvements](#future-improvements)
-11. [License](#license)
+5. [Architecture](#architecture)
+6. [How It Works](#how-it-works)
+7. [Setup & Build](#setup--build)
+8. [Usage](#usage)
+9. [Configuration](#configuration)
+10. [Troubleshooting](#troubleshooting)
+11. [Future Improvements](#future-improvements)
+12. [License](#license)
 
 ---
 
 ## Features
 - **Touch‑driven GUI**  
   Custom TouchGFX interface displaying a grid of sample‑trigger buttons.
+- **Recording & Playback**  
+  Record audio in real time and immediately replay.
 - **Flexible Storage**  
-  Play WAV samples from onboard flash or SD card (FATFS).
+  Store samples in QuadSPI flash or on SD card (FATFS).
 - **High‑Quality Audio**  
   Uses SAI/I²S peripheral with CODEC for stereo PCM playback (44.1 kHz & 48 kHz).
-- **Modular Drivers**  
-  STM32 HAL + BSP layers; easily swap audio codec or storage backend.
-- **Configurable Banks**  
-  Support for multi‑bank sample layouts and dynamic loading.
+- **FreeRTOS‑powered**  
+  Five tasks manage audio, storage, GUI, and initialization.
 
 ---
 
@@ -47,104 +49,131 @@ SamplerAudioGUI lets you trigger and play back last recorded audio sample in rea
 - STM32CubeMX (optional, for `.ioc` edits)
 - ST‑Link/V2 driver (for flashing & debugging)
 - TouchGFX Designer v4.x (GUI project files included)
+- FreeRTOS (included via STM32CubeMX Middleware)
 
 ---
 
 ## Directory Structure
-```
-
+```plaintext
 SamplerAudioGUI/
 ├── Core/
-│   ├── Inc/        # Application headers (main, audio ctrl, UI callbacks)
-│   └── Src/        # Application code
+│   ├── Inc/        # Application headers (tasks, callbacks)
+│   └── Src/        # Application and FreeRTOS code
 ├── Drivers/        # STM32 HAL + BSP (audio, SD, display)
-├── Middlewares/    # FATFS, LIBJPEG, TouchGFX framework
+├── Middlewares/    # FreeRTOS, FATFS, LIBJPEG, TouchGFX
 ├── TouchGFX/       # TouchGFX Designer project & assets
 ├── STM32CubeIDE/   # .project, .cproject & debug settings
-├── STM32F769I\_DISCO.ioc # CubeMX hardware config
-├── AudioSamples/   # Example .wav files (flash‑burned)
+├── STM32F769I_DISCO.ioc # CubeMX hardware config
+├── AudioSamples/   # Example .wav files (flashed)
 ├── changelog.txt   # Project change history
 └── LICENSE         # MIT License
-
 ````
+
+---
+
+## Architecture
+
+This project runs under FreeRTOS with these primary tasks:
+
+* **RecAndPlayTask**
+  Handles recording from ADC/codec and playback operations.
+* **SaveAndReadTask**
+  Manages SD card reads/writes via FATFS.
+* **TouchGFXTask**
+  Drives GUI rendering and input processing.
+* **VideoTask**
+  Streams GUI frames; uses SDRAM for frame buffers.
+* **AudioInitTask**
+  Initializes codec and configures SAI and I²S peripherals.
+
+> ▶ In the future, **AudioInitTask** should be merged into **RecAndPlayTask** using an I²C mutex to streamline initialization and avoid redundant code.
 
 ---
 
 ## How It Works
 
 ### Sample Storage
-1. **Flash**: Preload critical samples into internal flash via a flash loader.
-2. **SD Card**: Place bulk samples on an SD card formatted as FAT32.
+
+1. **QuadSPI Flash**: Store critical or last-recorded samples.
+2. **SD Card**: Store bulk samples on FAT32-formatted SD cards.
 
 ### GUI & Input
-- TouchGFX draws a grid of buttons corresponding to sample slots.
-- On touch, the UI layer triggers the audio‑playback callback.
 
-### Audio Playback
-- Decode samples if necessary (LIBJPEG or raw WAV PCM).
-- Stream data to the audio codec over SAI/I²S via DMA for glitch‑free playback.
+* TouchGFX draws buttons and handles touch events.
+* Button presses send messages to FreeRTOS tasks.
+
+### Audio Playback & Recording
+
+* **Recording**: Data acquired via codec to buffer, DMA transfers.
+* **Playback**: WAV data streamed via DMA to SAI/I²S.
 
 ---
 
 ## Setup & Build
+
 1. **Clone the repo**:
+
    ```bash
    git clone https://github.com/cypele/SamplerAudioGUI.git
    cd SamplerAudioGUI
-````
-
+   ```
 2. **Import into STM32CubeIDE**:
 
    * File → Import → Existing Projects into Workspace
    * Select the `SamplerAudioGUI` root directory
 3. **(Re)Generate with CubeMX**:
 
-   * Open `STM32F769I_DISCO.ioc` in STM32CubeMX
-   * Adjust pinouts or middleware as needed
-   * Generate code → Overwrite project files
+   * Open `STM32F769I_DISCO.ioc`
+   * Enable FreeRTOS and middleware
+   * Generate code → Overwrite project
 4. **Build & Flash**:
 
-   * Set build target to `Debug` or `Release`
-   * Click **Build**
-   * Connect the DISCO board via ST‑Link
-   * Click **Debug** to program and start
+   * Build target `Debug` or `Release`
+   * Connect board via ST‑Link
+   * Flash and start via Debug
 
 ---
 
 ## Usage
 
-* **Load samples**: Copy `.wav` files into the root of your FAT32 SD card.
-* **Sample naming**: Name files `SLOT01.wav`, `SLOT02.wav`, … to map to buttons 1–n.
-* **Playback**: Tap a button on the touchscreen to play the corresponding sample.
-* **Bank navigation**: Swipe left/right or use bank‑select controls to switch sample sets.
+* **Record**: Press the record button; touch interface indicates status.
+* **Playback**: Tap the sample slot to play.
+* **Sample management**: Browse banks via swipe or controls.
 
 ---
 
 ## Configuration
 
-| Parameter         | Default        | Notes                              |
-| ----------------- | -------------- | ---------------------------------- |
-| Audio format      | WAV PCM 16‑bit | Mono or stereo supported           |
-| Sampling rate     | 44.1 kHz       | Change via `AUDIO_SAMPLER_RATE_HZ` |
-| SD mount point    | `/sdcard/`     | Configurable in `ffconf.h`         |
-| Touch calibration | Pre‑calibrated | Run TouchGFX calibrator if needed  |
+| Parameter      | Default        | Notes                              |
+| -------------- | -------------- | ---------------------------------- |
+| Audio format   | WAV PCM 16‑bit | Mono or stereo supported           |
+| Sampling rate  | 44.1 kHz       | Change via `AUDIO_SAMPLER_RATE_HZ` |
+| SD mount point | `/sdcard/`     | Configurable in `ffconf.h`         |
+| Frame buffers  | SDRAM          | Allocated for TouchGFX video       |
 
 ---
 
 ## Troubleshooting
 
-* **SD not mounting**:
+* **DMA reuse artifacts**:
+  Buffers aren’t cleared before reuse; residual samples may play.
+  *Workaround*: Manually zero buffers before re-recording.
 
-  * Use FAT32‑formatted cards ≤32 GB.
-  * Initilize SDMMC with 1 bit wide bus
+* **Random hangs**:
+  Possible task-priority misconfiguration or RAM fragmentation.
+  *Check*: Verify FreeRTOS task priorities and heap settings.
+
+* **SD not mounting**:
+  Use FAT32 ≤32 GB and initialize SDMMC in 1‑bit mode.
 
 ---
 
 ## Future Improvements
 
-* Multi‑bank and folder browsing in GUI
-* Pitch shifting & tempo control
-* MIDI over USB host input for external controllers
+* Merge **AudioInitTask** into **RecAndPlayTask** with I²C mutex.
+* Folder browsing and multi‑bank UI.
+* On‑device real‑time sample processing (pitch shift, tempo).
+* USB-MIDI host support.
 
 ---
 
