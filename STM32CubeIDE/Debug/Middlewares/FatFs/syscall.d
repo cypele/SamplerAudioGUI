@@ -55,9 +55,6 @@ Middlewares/FatFs/syscall.o: \
  ../../Middlewares/Third_Party/FreeRTOS/Source/include/task.h \
  ../../Middlewares/Third_Party/FreeRTOS/Source/include/list.h \
  ../../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h \
- ../../Middlewares/Third_Party/FreeRTOS/Source/include/semphr.h \
- ../../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h \
- ../../Middlewares/Third_Party/FreeRTOS/Source/include/task.h \
  ../../FATFS/Target/bsp_driver_sd.h ../../FATFS/Target/fatfs_platform.h
 C:/TouchGFXProjects/SamplerAudio1/Middlewares/Third_Party/FatFs/src/option/../ff.h:
 C:/TouchGFXProjects/SamplerAudio1/Middlewares/Third_Party/FatFs/src/option/../integer.h:
@@ -116,8 +113,5 @@ C:/TouchGFXProjects/SamplerAudio1/Middlewares/Third_Party/FatFs/src/option/../in
 ../../Middlewares/Third_Party/FreeRTOS/Source/include/task.h:
 ../../Middlewares/Third_Party/FreeRTOS/Source/include/list.h:
 ../../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h:
-../../Middlewares/Third_Party/FreeRTOS/Source/include/semphr.h:
-../../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h:
-../../Middlewares/Third_Party/FreeRTOS/Source/include/task.h:
 ../../FATFS/Target/bsp_driver_sd.h:
 ../../FATFS/Target/fatfs_platform.h:

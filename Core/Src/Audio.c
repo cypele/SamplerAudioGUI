@@ -36,16 +36,12 @@ DMA_HandleTypeDef hdma_sai_tx;
 DMA_HandleTypeDef hdma_sai_rx;
 extern I2C_HandleTypeDef hi2c4;
 
-extern osMessageQId CommandAudioQueueHandle;
-extern osMessageQId RecordingQueueHandle;
-extern osMessageQId PlayingQueueHandle;
+extern osMessageQueueId_t CommandAudioQueueHandle;
+extern osMessageQueueId_t RecordingQueueHandle;
+extern osMessageQueueId_t PlayingQueueHandle;
 
 extern TaskHandle_t xRecordingTaskHandle;
 extern TaskHandle_t xPlayingTaskHandle;
-
-extern SemaphoreHandle_t StartRecordingSemaphoreHandle;
-extern SemaphoreHandle_t StopRecordingSemaphoreHandle;
-extern SemaphoreHandle_t StartPlayingSemaphoreHandle;
 
 
 volatile uint32_t audio_rec_buffer_state = BUFFER_OFFSET_NONE;
@@ -93,10 +89,14 @@ void StartRecAndPlayTask(void const * argument)
 
     for (;;)
     {
-        if (xQueueReceive(CommandAudioQueueHandle, &command, portMAX_DELAY) == pdTRUE)
+        if (osMessageQueueGet(CommandAudioQueueHandle, &command, NULL, osWaitForever) == osOK)
         {
+
             if (command == CMD_START_RECORDING)
             {
+            	osMessageQueueReset(CommandAudioQueueHandle);
+            	osMessageQueueReset(RecordingQueueHandle);
+
                 recordingComplete = 0;
                 audio_rec_buffer_state = BUFFER_OFFSET_NONE;
 
@@ -136,7 +136,7 @@ void StartRecAndPlayTask(void const * argument)
                         chunk.data = output_ptr;
                         chunk.length = out_idx;
 
-                        xQueueSend(RecordingQueueHandle, &chunk, portMAX_DELAY);
+                        osMessageQueuePut(RecordingQueueHandle, &chunk, 0, osWaitForever);
 
                         if (current_compressed_buffer == 0)
                             current_compressed_buffer = 1;
@@ -145,7 +145,7 @@ void StartRecAndPlayTask(void const * argument)
 
                         audio_rec_buffer_state = BUFFER_OFFSET_NONE;
 
-                        if (xQueueReceive(CommandAudioQueueHandle, &command, 0) == pdTRUE)
+                        if (osMessageQueueGet(CommandAudioQueueHandle, &command, NULL, 0) == osOK)
                         {
                             if (command == CMD_STOP_RECORDING)
                             {
@@ -160,11 +160,13 @@ void StartRecAndPlayTask(void const * argument)
                 }
 
                 AudioChunk_t endSignal = { .data = NULL, .length = 0 };
-                xQueueSend(RecordingQueueHandle, &endSignal, portMAX_DELAY);
+                osMessageQueuePut(RecordingQueueHandle, &endSignal, 0, osWaitForever);
             }
 
             else if (command == CMD_START_PLAYING)
             {
+            	osMessageQueueReset(CommandAudioQueueHandle);
+
                 playingComplete = 0;
                 audio_tx_buffer_state = BUFFER_OFFSET_NONE;
 
@@ -186,7 +188,7 @@ void StartRecAndPlayTask(void const * argument)
                     {
                         if (currentChunkData == NULL || currentChunkRemaining == 0)
                         {
-                            if (xQueueReceive(PlayingQueueHandle, &chunk, portMAX_DELAY) == pdTRUE)
+                            if (osMessageQueueGet(PlayingQueueHandle, &chunk, NULL, osWaitForever) == osOK)
                             {
                                 if (chunk.data == NULL || chunk.length == 0)
                                 {
@@ -257,7 +259,7 @@ void StartRecAndPlayTask(void const * argument)
                     {
                         if (currentChunkData == NULL || currentChunkRemaining == 0)
                         {
-                            if (xQueueReceive(PlayingQueueHandle, &chunk, portMAX_DELAY) == pdTRUE)
+                            if (osMessageQueueGet(PlayingQueueHandle, &chunk, NULL, osWaitForever) == osOK)
                             {
                                 if (chunk.data == NULL || chunk.length == 0)
                                 {
@@ -416,7 +418,7 @@ static void SAIx_Out_Init(uint32_t AudioFreq)
     haudio_out_sai.Init.Mckdiv         = 0;
 
     /* Configure SAI_Block_x Frame */
-    haudio_out_sai.FrameInit.FrameLength       = 32;
+    haudio_out_sai.FrameInit.FrameLength       = 64;
     haudio_out_sai.FrameInit.ActiveFrameLength = 32;
     haudio_out_sai.FrameInit.FSDefinition      = SAI_FS_CHANNEL_IDENTIFICATION;
     haudio_out_sai.FrameInit.FSPolarity        = SAI_FS_ACTIVE_LOW;
@@ -425,8 +427,8 @@ static void SAIx_Out_Init(uint32_t AudioFreq)
     /* Configure SAI Block_x Slot */
     haudio_out_sai.SlotInit.FirstBitOffset = 0;
     haudio_out_sai.SlotInit.SlotSize       = SAI_SLOTSIZE_DATASIZE;
-    haudio_out_sai.SlotInit.SlotNumber     = 2;
-    haudio_out_sai.SlotInit.SlotActive     = CODEC_AUDIOFRAME_SLOT_02;
+    haudio_out_sai.SlotInit.SlotNumber     = 4;
+    haudio_out_sai.SlotInit.SlotActive     = CODEC_AUDIOFRAME_SLOT_0123;
 
     HAL_SAI_Init(&haudio_out_sai);
 
@@ -461,7 +463,7 @@ static void SAIx_In_Init(uint32_t AudioFreq)
     haudio_in_sai.Init.Mckdiv         = 0;
 
     /* Configure SAI_Block_x Frame */
-    haudio_in_sai.FrameInit.FrameLength       = 32;
+    haudio_in_sai.FrameInit.FrameLength       = 64;
     haudio_in_sai.FrameInit.ActiveFrameLength = 32;
     haudio_in_sai.FrameInit.FSDefinition      = SAI_FS_CHANNEL_IDENTIFICATION;
     haudio_in_sai.FrameInit.FSPolarity        = SAI_FS_ACTIVE_LOW;
@@ -470,8 +472,8 @@ static void SAIx_In_Init(uint32_t AudioFreq)
     /* Configure SAI Block_x Slot */
     haudio_in_sai.SlotInit.FirstBitOffset = 0;
     haudio_in_sai.SlotInit.SlotSize       = SAI_SLOTSIZE_DATASIZE;
-    haudio_in_sai.SlotInit.SlotNumber     = 2;
-    haudio_in_sai.SlotInit.SlotActive     = CODEC_AUDIOFRAME_SLOT_02;
+    haudio_in_sai.SlotInit.SlotNumber     = 4;
+    haudio_in_sai.SlotInit.SlotActive     = CODEC_AUDIOFRAME_SLOT_0123;
 
     HAL_SAI_Init(&haudio_in_sai);
 

@@ -1,7 +1,7 @@
-C:/TouchGFXProjects/SamplerAudio1/Core/Src/Audio.c:312:6:simple_noise_filter	20	static
-C:/TouchGFXProjects/SamplerAudio1/Core/Src/Audio.c:83:6:StartRecAndPlayTask	64	static
-C:/TouchGFXProjects/SamplerAudio1/Core/Src/Audio.c:349:6:sin_wave_data_to_buffer	0	static
-C:/TouchGFXProjects/SamplerAudio1/Core/Src/Audio.c:504:6:SAI_Clock_Configuration	152	static
-C:/TouchGFXProjects/SamplerAudio1/Core/Src/Audio.c:530:6:Sai_Out_MspInit	64	static
-C:/TouchGFXProjects/SamplerAudio1/Core/Src/Audio.c:590:6:Sai_In_MspInit	64	static
-C:/TouchGFXProjects/SamplerAudio1/Core/Src/Audio.c:659:6:AudioInit	40	static
+C:/TouchGFXProjects/SamplerAudio1/Core/Src/Audio.c:314:6:simple_noise_filter	20	static
+C:/TouchGFXProjects/SamplerAudio1/Core/Src/Audio.c:79:6:StartRecAndPlayTask	72	static
+C:/TouchGFXProjects/SamplerAudio1/Core/Src/Audio.c:351:6:sin_wave_data_to_buffer	0	static
+C:/TouchGFXProjects/SamplerAudio1/Core/Src/Audio.c:506:6:SAI_Clock_Configuration	152	static
+C:/TouchGFXProjects/SamplerAudio1/Core/Src/Audio.c:532:6:Sai_Out_MspInit	64	static
+C:/TouchGFXProjects/SamplerAudio1/Core/Src/Audio.c:592:6:Sai_In_MspInit	64	static
+C:/TouchGFXProjects/SamplerAudio1/Core/Src/Audio.c:661:6:AudioInit	40	static

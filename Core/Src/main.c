@@ -736,7 +736,7 @@ static void MX_LTDC_Init(void)
   HAL_DSI_ConfigCommand(&hdsi, &LPCmd);
 
   __HAL_LTDC_ENABLE(&hltdc);
-  
+
   /* USER CODE END LTDC_Init 2 */
 
 }

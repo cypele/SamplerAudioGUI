@@ -52,9 +52,6 @@ Core/Src/SdCard.o: C:/TouchGFXProjects/SamplerAudio1/Core/Src/SdCard.c \
  ../../Middlewares/Third_Party/FreeRTOS/Source/include/task.h \
  ../../Middlewares/Third_Party/FreeRTOS/Source/include/list.h \
  ../../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h \
- ../../Middlewares/Third_Party/FreeRTOS/Source/include/semphr.h \
- ../../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h \
- ../../Middlewares/Third_Party/FreeRTOS/Source/include/task.h \
  ../../FATFS/App/fatfs.h ../../Middlewares/Third_Party/FatFs/src/ff.h \
  ../../Middlewares/Third_Party/FatFs/src/integer.h \
  ../../FATFS/Target/ffconf.h ../../FATFS/Target/bsp_driver_sd.h \
@@ -119,9 +116,6 @@ Core/Src/SdCard.o: C:/TouchGFXProjects/SamplerAudio1/Core/Src/SdCard.c \
 ../../Middlewares/Third_Party/FreeRTOS/Source/include/task.h:
 ../../Middlewares/Third_Party/FreeRTOS/Source/include/list.h:
 ../../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h:
-../../Middlewares/Third_Party/FreeRTOS/Source/include/semphr.h:
-../../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h:
-../../Middlewares/Third_Party/FreeRTOS/Source/include/task.h:
 ../../FATFS/App/fatfs.h:
 ../../Middlewares/Third_Party/FatFs/src/ff.h:
 ../../Middlewares/Third_Party/FatFs/src/integer.h:

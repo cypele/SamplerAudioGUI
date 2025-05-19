@@ -53,9 +53,6 @@ Core/Src/stm32f7xx_it.o: \
  ../../Middlewares/Third_Party/FreeRTOS/Source/include/task.h \
  ../../Middlewares/Third_Party/FreeRTOS/Source/include/list.h \
  ../../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h \
- ../../Middlewares/Third_Party/FreeRTOS/Source/include/semphr.h \
- ../../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h \
- ../../Middlewares/Third_Party/FreeRTOS/Source/include/task.h \
  ../../Core/Inc/stm32f7xx_it.h
 ../../Core/Inc/main.h:
 ../../Drivers/STM32F7xx_HAL_Driver/Inc/stm32f7xx_hal.h:
@@ -111,7 +108,4 @@ Core/Src/stm32f7xx_it.o: \
 ../../Middlewares/Third_Party/FreeRTOS/Source/include/task.h:
 ../../Middlewares/Third_Party/FreeRTOS/Source/include/list.h:
 ../../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h:
-../../Middlewares/Third_Party/FreeRTOS/Source/include/semphr.h:
-../../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h:
-../../Middlewares/Third_Party/FreeRTOS/Source/include/task.h:
 ../../Core/Inc/stm32f7xx_it.h:

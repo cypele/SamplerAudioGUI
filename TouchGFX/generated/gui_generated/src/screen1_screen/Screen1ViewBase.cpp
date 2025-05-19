@@ -17,7 +17,7 @@ Screen1ViewBase::Screen1ViewBase() :
     background.setScalingAlgorithm(touchgfx::ScalableImage::NEAREST_NEIGHBOR);
     add(background);
 
-    PlayButton.setXY(111, 196);
+    PlayButton.setXY(113, 196);
     PlayButton.setBitmaps(touchgfx::Bitmap(BITMAP_ALTERNATE_THEME_IMAGES_WIDGETS_BUTTON_REGULAR_HEIGHT_50_TINY_ROUND_DISABLED_ID), touchgfx::Bitmap(BITMAP_ALTERNATE_THEME_IMAGES_WIDGETS_BUTTON_REGULAR_HEIGHT_50_TINY_ROUND_DISABLED_ID), touchgfx::Bitmap(BITMAP_ICON_THEME_IMAGES_AV_PLAY_CIRCLE_FILLED_50_50_1B8207_SVG_ID), touchgfx::Bitmap(BITMAP_ICON_THEME_IMAGES_AV_PLAY_CIRCLE_FILLED_50_50_ED0202_SVG_ID));
     PlayButton.setIconXY(30, 0);
     PlayButton.setAction(buttonCallback);

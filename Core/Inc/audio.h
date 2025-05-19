@@ -15,7 +15,7 @@
 // Konfiguracja buforów i próbkowania audio
 //
 #define BUFFER_SIZE_SAMPLES     4096              // Liczba próbek audio
-#define DMA_BYTES_PER_FRAME     8                 // Bajty na ramkę DMA (4 sloty × 2 bajty)
+#define DMA_BYTES_PER_FRAME     4                 // Bajty na ramkę DMA (4 sloty × 2 bajty)
 #define DMA_BYTES_PER_MSIZE     2                 // Bajty na element (16-bit)
 #define DMA_BUFFER_SIZE_BYTES   (BUFFER_SIZE_SAMPLES * DMA_BYTES_PER_FRAME)
 #define DMA_BUFFER_MSIZE        (DMA_BUFFER_SIZE_BYTES / DMA_BYTES_PER_MSIZE)

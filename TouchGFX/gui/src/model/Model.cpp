@@ -5,11 +5,9 @@
     // Kompilacja dla symulatora – pomiń FreeRTOS
 #else
     #include "cmsis_os.h" // Tylko dla targetu embedded
-	#include "semphr.h"
-	#include "queue.h"
     #include "main.h"
-	extern QueueHandle_t CommandSDQueueHandle;
-	extern QueueHandle_t CommandAudioQueueHandle;
+	extern osMessageQueueId_t CommandSDQueueHandle;
+	extern osMessageQueueId_t CommandAudioQueueHandle;
 
 
 	Audio_SdCard_Command_t StopRecordCommand = CMD_STOP_RECORDING;
@@ -20,10 +18,8 @@
 	extern "C" {
 		void Model::StartRecording()
 		{
-			xQueueSend(CommandAudioQueueHandle, &StartRecordCommand, portMAX_DELAY);
-			xQueueSend(CommandSDQueueHandle, &StartRecordCommand, portMAX_DELAY);
-
-
+		    osMessageQueuePut(CommandAudioQueueHandle, &StartRecordCommand, 0, 0);
+		    osMessageQueuePut(CommandSDQueueHandle, &StartRecordCommand, 0, 0);
 		}
 	}
 
@@ -31,8 +27,8 @@
 	extern "C" {
 		void Model::StopRecording()
 		{
-			xQueueSend(CommandAudioQueueHandle, &StopRecordCommand, portMAX_DELAY);
-			xQueueSend(CommandSDQueueHandle, &StopRecordCommand, portMAX_DELAY);
+		    osMessageQueuePut(CommandAudioQueueHandle, &StopRecordCommand, 0, 0);
+		    osMessageQueuePut(CommandSDQueueHandle, &StopRecordCommand, 0, 0);
 
 		}
 	}
@@ -40,8 +36,8 @@
 	extern "C" {
 		void Model::StartPlaying()
 		{
-			xQueueSend(CommandSDQueueHandle, &StartPlayCommand, portMAX_DELAY);
-			xQueueSend(CommandAudioQueueHandle, &StartPlayCommand, portMAX_DELAY);
+		    osMessageQueuePut(CommandAudioQueueHandle, &StartPlayCommand, 0, 0);
+		    osMessageQueuePut(CommandSDQueueHandle, &StartPlayCommand, 0, 0);
 
 		}
 	}

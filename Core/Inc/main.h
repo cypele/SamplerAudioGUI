@@ -33,7 +33,7 @@ extern "C" {
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "cmsis_os.h"
-#include "semphr.h"
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -60,28 +60,21 @@ void MX_I2C4_Init(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define LED_R_Pin GPIO_PIN_13              // Czerwona dioda LED
+#define LED_R_Pin GPIO_PIN_13
 #define LED_R_GPIO_Port GPIOJ
-
-#define DSI_RESET_Pin GPIO_PIN_15          // Reset interfejsu DSI (wyświetlacza)
+#define DSI_RESET_Pin GPIO_PIN_15
 #define DSI_RESET_GPIO_Port GPIOJ
-
-#define uSD_Detect_Pin GPIO_PIN_15         // Wykrywanie obecności karty microSD
+#define uSD_Detect_Pin GPIO_PIN_15
 #define uSD_Detect_GPIO_Port GPIOI
-
-#define RENDER_TIME_Pin GPIO_PIN_7         // Pomiar czasu renderowania (debug/diagnostyka)
+#define RENDER_TIME_Pin GPIO_PIN_7
 #define RENDER_TIME_GPIO_Port GPIOC
-
-#define VSYNC_FREQ_Pin GPIO_PIN_6          // Pomiar częstotliwości VSYNC (debug/diagnostyka)
+#define VSYNC_FREQ_Pin GPIO_PIN_6
 #define VSYNC_FREQ_GPIO_Port GPIOC
-
-#define MCU_ACTIVE_Pin GPIO_PIN_6          // Wskaźnik aktywności MCU (debug/diagnostyka)
+#define MCU_ACTIVE_Pin GPIO_PIN_6
 #define MCU_ACTIVE_GPIO_Port GPIOF
-
-#define LED_G_Pin GPIO_PIN_5               // Zielona dioda LED
+#define LED_G_Pin GPIO_PIN_5
 #define LED_G_GPIO_Port GPIOJ
-
-#define FRAME_RATE_Pin GPIO_PIN_1          // Pomiar liczby klatek na sekundę (debug/diagnostyka)
+#define FRAME_RATE_Pin GPIO_PIN_1
 #define FRAME_RATE_GPIO_Port GPIOJ
 
 /* USER CODE BEGIN Private defines */

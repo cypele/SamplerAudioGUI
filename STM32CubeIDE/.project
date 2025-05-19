@@ -535,6 +535,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/TouchGFX/generated/fonts/src/CachedFont.cpp</locationURI>
 		</link>
 		<link>
+			<name>Application/User/generated/CustomContainer1Base.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/TouchGFX/generated/gui_generated/src/containers/CustomContainer1Base.cpp</locationURI>
+		</link>
+		<link>
 			<name>Application/User/generated/FontCache.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/TouchGFX/generated/fonts/src/FontCache.cpp</locationURI>
@@ -668,6 +673,11 @@
 			<name>Application/User/generated/image_icon_theme_images_image_circle_50_50_FF082D.svg.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/TouchGFX/generated/images/src/__generated/image_icon_theme_images_image_circle_50_50_FF082D.svg.cpp</locationURI>
+		</link>
+		<link>
+			<name>Application/User/gui/CustomContainer1.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/TouchGFX/gui/src/containers/CustomContainer1.cpp</locationURI>
 		</link>
 		<link>
 			<name>Application/User/gui/FrontendApplication.cpp</name>

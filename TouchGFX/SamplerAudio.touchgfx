@@ -15,7 +15,7 @@
           {
             "Type": "ButtonWithIcon",
             "Name": "PlayButton",
-            "X": 111,
+            "X": 113,
             "Y": 196,
             "Width": 110,
             "Height": 50,
@@ -98,7 +98,15 @@
         ]
       }
     ],
-    "CustomContainerDefinitions": [],
+    "CustomContainerDefinitions": [
+      {
+        "Name": "CustomContainer1",
+        "Width": 250,
+        "Height": 250,
+        "Components": [],
+        "Interactions": []
+      }
+    ],
     "Name": "SamplerAudio1",
     "Resolution": {
       "Width": 800,

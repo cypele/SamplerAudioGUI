@@ -1,5 +1,5 @@
-C:/TouchGFXProjects/SamplerAudio1/Core/Src/SdCard.c:155:6:GenerateNextFilename	40	static
-C:/TouchGFXProjects/SamplerAudio1/Core/Src/SdCard.c:167:6:GetLatestFilename	40	static
-C:/TouchGFXProjects/SamplerAudio1/Core/Src/SdCard.c:205:6:FillWavHeader	16	static
-C:/TouchGFXProjects/SamplerAudio1/Core/Src/SdCard.c:225:6:UpdateWavHeader	24	static
-C:/TouchGFXProjects/SamplerAudio1/Core/Src/SdCard.c:39:6:StartSaveAndReadTask	224	static
+C:/TouchGFXProjects/SamplerAudio1/Core/Src/SdCard.c:159:6:GenerateNextFilename	40	static
+C:/TouchGFXProjects/SamplerAudio1/Core/Src/SdCard.c:171:6:GetLatestFilename	40	static
+C:/TouchGFXProjects/SamplerAudio1/Core/Src/SdCard.c:209:6:FillWavHeader	16	static
+C:/TouchGFXProjects/SamplerAudio1/Core/Src/SdCard.c:229:6:UpdateWavHeader	24	static
+C:/TouchGFXProjects/SamplerAudio1/Core/Src/SdCard.c:39:6:StartSaveAndReadTask	216	static

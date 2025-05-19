@@ -46,10 +46,11 @@ void StartSaveAndReadTask(void const * argument)
     for (;;)
     {
         // Czekamy na komendę z CommandQueueHandle
-        if (xQueueReceive(CommandSDQueueHandle, &command, portMAX_DELAY) == pdTRUE)
+        if (osMessageQueueGet(CommandSDQueueHandle, &command, NULL, osWaitForever) == osOK)
         {
             if (command == CMD_START_RECORDING)
             {
+            	osMessageQueueReset(CommandSDQueueHandle);
                 bool recordingInProgress = true;
 
                 // Inicjalizacja SD, tworzenie pliku
@@ -70,7 +71,7 @@ void StartSaveAndReadTask(void const * argument)
 
                 while (recordingInProgress)
                 {
-                    if (xQueueReceive(RecordingQueueHandle, &chunk, portMAX_DELAY) == pdTRUE)
+                    if (osMessageQueueGet(RecordingQueueHandle, &chunk, NULL, osWaitForever) == osOK)
                     {
                         if (chunk.data == NULL)
                         {
@@ -100,6 +101,9 @@ void StartSaveAndReadTask(void const * argument)
 
 				else if (command == CMD_START_PLAYING)
 				{
+	            	osMessageQueueReset(PlayingQueueHandle);
+	            	osMessageQueueReset(CommandSDQueueHandle);
+
 					// Otwórz ostatni plik do odtwarzania
 					if (f_mount(&SDFatFS, (TCHAR const*)SDPath, 1) != FR_OK)
 						Error_Handler();
@@ -135,7 +139,7 @@ void StartSaveAndReadTask(void const * argument)
 						chunk.length = bytesread / sizeof(int16_t);
 
 						// Wysyłamy odczytany chunk do kolejki.
-						xQueueSend(PlayingQueueHandle, &chunk, portMAX_DELAY);
+						osMessageQueuePut(PlayingQueueHandle, &chunk, 0, osWaitForever);
 
 						// Przełączamy bufor, aby nie nadpisać jeszcze nieprzetworzonych danych
 						currentBufferIdx ^= 1;
@@ -143,7 +147,7 @@ void StartSaveAndReadTask(void const * argument)
 
 					// Sygnał końca odtwarzania
 					AudioChunk_t endChunk = { .data = NULL, .length = 0 };
-					xQueueSend(PlayingQueueHandle, &endChunk, portMAX_DELAY);
+					osMessageQueuePut(PlayingQueueHandle, &endChunk, 0, osWaitForever);
 
 					f_close(&SDFile);
 				}
