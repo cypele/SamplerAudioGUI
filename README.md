@@ -1,4 +1,3 @@
-````markdown
 ## SamplerAudioGUI
 *Graphical, touch‑driven audio sampler for the STM32F769I‑DISCO*
 
